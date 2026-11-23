@@ -1,0 +1,405 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum PatientSex {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
+enum SurgicalRole {
+  ASSISTANT
+  FIRST_ASSISTANT
+  OPERATOR
+}
+
+enum CaseStatus {
+  DRAFT
+  IN_PROGRESS
+  AWAITING_FOLLOWUP
+  COMPLETED
+  ARCHIVED
+}
+
+enum SharePermission {
+  VIEWER
+  EDITOR
+}
+
+enum MediaCategory {
+  PREOPERATIVE_XRAY
+  POSTOPERATIVE_XRAY
+  INTRAOPERATIVE_PHOTO
+  CLINICAL_PHOTO
+  LABORATORY_REPORT
+  MEDICAL_DOCUMENT
+  OTHER
+}
+
+enum ImplantType {
+  PLATE
+  SCREW
+  NAIL
+  OTHER
+}
+
+enum AuditAction {
+  CASE_CREATED
+  CASE_VIEWED
+  CASE_EDITED
+  CASE_DELETED
+  CASE_ARCHIVED
+  CASE_EXPORTED_PDF
+  ATTACHMENT_UPLOADED
+  ATTACHMENT_DELETED
+  CASE_SHARED
+  PERMISSION_CHANGED
+  ACCESS_REVOKED
+  INVITATION_SENT
+  INVITATION_REVOKED
+  INVITATION_ACCEPTED
+}
+
+enum NotificationType {
+  CASE_SHARED
+  PERMISSION_CHANGED
+  ACCESS_REVOKED
+  INVITATION_ACCEPTED
+  FOLLOWUP_REMINDER
+}
+
+// ─── Authentication & Users ───────────────────────────────────────────────────
+
+model User {
+  id                String   @id @default(cuid())
+  name              String
+  email             String   @unique
+  emailVerified     Boolean  @default(false)
+  image             String?
+  professionalTitle String?
+  hospital          String?
+  profileImage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Better Auth relations
+  sessions Session[]
+  accounts Account[]
+
+  // Domain relations
+  ownedCases       SurgicalCase[]
+  caseSequences    CaseSequence[]
+  sentInvitations  Invitation[]       @relation("InvitedBy")
+  sharedWithMe     CaseShare[]        @relation("SharedWithUser")
+  grantedShares    CaseShare[]        @relation("GrantedBy")
+  pendingShares    PendingCaseShare[] @relation("PendingShareGrantedBy")
+  uploadedMedia    CaseMedia[]
+  createdFollowups CaseFollowup[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  password              String?
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ─── Invitations ──────────────────────────────────────────────────────────────
+
+model Invitation {
+  id         String           @id @default(cuid())
+  invitedBy  String
+  email      String
+  tokenHash  String           @unique
+  status     InvitationStatus @default(PENDING)
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime         @default(now())
+
+  inviter       User               @relation("InvitedBy", fields: [invitedBy], references: [id], onDelete: Cascade)
+  pendingShares PendingCaseShare[]
+
+  @@index([email])
+  @@index([invitedBy])
+  @@index([status, expiresAt])
+}
+
+// ─── Surgical Cases ───────────────────────────────────────────────────────────
+
+model CaseSequence {
+  id      String @id @default(cuid())
+  ownerId String
+  year    Int
+  lastSeq Int    @default(0)
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, year])
+}
+
+model SurgicalCase {
+  id                     String        @id @default(cuid())
+  ownerId                String
+  caseNumber             String
+  operationDate          DateTime?
+  patientAge             Int?
+  patientSex             PatientSex    @default(UNSPECIFIED)
+
+  // Diagnosis & Procedure
+  diagnosis              String?
+  procedure              String?
+  fractureClassification String?
+  classificationSystem   String?
+
+  // Surgical Team
+  surgeon                String?
+  myRole                 SurgicalRole?
+  seniorSurgeon          String?
+  hospital               String?
+
+  // Documentation
+  intraoperativeNotes    String?       @db.Text
+  postoperativePlan      Json?
+  learningPoints         String?       @db.Text
+
+  // Management
+  status                 CaseStatus    @default(DRAFT)
+  nextFollowupDate       DateTime?
+  archivedAt             DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  owner         User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  shares        CaseShare[]
+  pendingShares PendingCaseShare[]
+  followups     CaseFollowup[]
+  media         CaseMedia[]
+  labResults    LaboratoryResult[]
+  implants      CaseImplant[]
+  auditLogs     AuditLog[]
+
+  @@unique([ownerId, caseNumber])
+  @@index([ownerId])
+  @@index([ownerId, status])
+  @@index([caseNumber])
+  @@index([operationDate])
+  @@index([diagnosis])
+  @@index([procedure])
+  @@index([fractureClassification])
+  @@index([hospital])
+  @@index([createdAt])
+}
+
+// ─── Selective Sharing ────────────────────────────────────────────────────────
+
+model CaseShare {
+  id               String          @id @default(cuid())
+  caseId           String
+  sharedWithUserId String
+  grantedBy        String
+  permission       SharePermission @default(VIEWER)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  revokedAt        DateTime?
+
+  surgicalCase SurgicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  sharedWith   User         @relation("SharedWithUser", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  granter      User         @relation("GrantedBy", fields: [grantedBy], references: [id], onDelete: Cascade)
+
+  // Active uniqueness (WHERE "revokedAt" IS NULL) is enforced via partial unique index in SQL migration
+  @@index([caseId])
+  @@index([sharedWithUserId])
+  @@index([sharedWithUserId, revokedAt])
+  @@index([caseId, sharedWithUserId, revokedAt])
+}
+
+model PendingCaseShare {
+  id           String          @id @default(cuid())
+  caseId       String
+  invitationId String
+  grantedBy    String
+  permission   SharePermission @default(VIEWER)
+  createdAt    DateTime        @default(now())
+  activatedAt  DateTime?
+  cancelledAt  DateTime?
+
+  surgicalCase SurgicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  invitation   Invitation   @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  granter      User         @relation("PendingShareGrantedBy", fields: [grantedBy], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, invitationId])
+  @@index([invitationId])
+}
+
+// ─── Clinical Sub-records ─────────────────────────────────────────────────────
+
+model CaseFollowup {
+  id                  String   @id @default(cuid())
+  caseId              String
+  createdBy           String?
+  followupDate        DateTime
+  clinicalOutcome     String?  @db.Text
+  radiologicalOutcome String?  @db.Text
+  complications       String?  @db.Text
+  notes               String?  @db.Text
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  surgicalCase SurgicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  author       User?        @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  attachments  CaseMedia[]
+
+  @@index([caseId, followupDate])
+}
+
+model CaseMedia {
+  id               String        @id @default(cuid())
+  caseId           String
+  followupId       String?
+  uploadedBy       String?
+  category         MediaCategory
+  storageKey       String        @unique
+  thumbnailKey     String?
+  originalFilename String
+  mimeType         String
+  fileSize         Int
+  description      String?
+  exifStripped     Boolean       @default(false)
+  metadata         Json?
+  createdAt        DateTime      @default(now())
+
+  surgicalCase SurgicalCase       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  followup     CaseFollowup?      @relation(fields: [followupId], references: [id], onDelete: SetNull)
+  uploader     User?              @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  labResults   LaboratoryResult[]
+
+  @@index([caseId])
+  @@index([caseId, category])
+  @@index([createdAt])
+}
+
+model LaboratoryResult {
+  id             String    @id @default(cuid())
+  caseId         String
+  testName       String
+  result         String
+  unit           String?
+  referenceRange String?
+  testDate       DateTime
+  notes          String?   @db.Text
+  attachmentId   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  surgicalCase SurgicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  attachment   CaseMedia?   @relation(fields: [attachmentId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, testDate])
+}
+
+model CaseImplant {
+  id             String      @id @default(cuid())
+  caseId         String
+  implantType    ImplantType
+  manufacturer   String?
+  model          String?
+  specifications String?
+  notes          String?     @db.Text
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  surgicalCase SurgicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+// ─── Auditing & Notifications ─────────────────────────────────────────────────
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  caseId    String?
+  action    AuditAction
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  surgicalCase SurgicalCase? @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([caseId, createdAt])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  caseId    String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
