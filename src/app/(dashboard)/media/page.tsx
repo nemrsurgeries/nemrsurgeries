@@ -3,7 +3,8 @@ import { FileText, Image as ImageIcon, ShieldCheck } from "lucide-react";
 import type { MediaCategory } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
-import { MEDIA_CATEGORY_LABELS } from "@/modules/cases/labels";
+import { getMediaCategoryLabel } from "@/modules/cases/labels";
+import { getServerI18n } from "@/lib/i18n/server";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,8 +30,11 @@ export default async function MediaLibraryPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  const { user } = await requireSession();
-  const { category } = await searchParams;
+  const [{ user }, { category }, { locale, dict }] = await Promise.all([
+    requireSession(),
+    searchParams,
+    getServerI18n(),
+  ]);
   const activeCategory =
     category && VALID_CATEGORIES.has(category)
       ? (category as MediaCategory)
@@ -53,12 +57,11 @@ export default async function MediaLibraryPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-          Medical Media Library
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          {dict.pages.mediaTitle}
         </h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Private imaging and medical documents across your owned surgical
-          cases.
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          {dict.pages.mediaDesc}
         </p>
       </div>
 
@@ -68,11 +71,11 @@ export default async function MediaLibraryPage({
           href="/media"
           className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
             !activeCategory
-              ? "border-blue-600 bg-blue-50 text-blue-800"
-              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              ? "border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300"
+              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70"
           }`}
         >
-          All Categories
+          {dict.pages.allCategories}
         </Link>
         {Array.from(VALID_CATEGORIES).map((cat) => {
           const typed = cat as MediaCategory;
@@ -83,11 +86,11 @@ export default async function MediaLibraryPage({
               href={`/media?category=${cat}`}
               className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                 active
-                  ? "border-blue-600 bg-blue-50 text-blue-800"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70"
               }`}
             >
-              {MEDIA_CATEGORY_LABELS[typed]}
+              {getMediaCategoryLabel(typed, locale)}
             </Link>
           );
         })}
@@ -95,46 +98,46 @@ export default async function MediaLibraryPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Attachments ({items.length})</CardTitle>
-          <CardDescription>
-            Select any item to open its parent surgical case and view via a
-            short-lived signed URL.
-          </CardDescription>
+          <CardTitle>
+            {dict.pages.mediaTitle} ({items.length})
+          </CardTitle>
+          <CardDescription>{dict.pages.mediaDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
-            <p className="py-10 text-center text-sm text-slate-500">
-              No medical media found in this view. Open a surgical case to
-              upload X-rays, photographs, or PDF reports.
+            <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+              {dict.pages.noMedia}
             </p>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {items.map((item) => {
                 const isImage = item.mimeType.startsWith("image/");
                 return (
                   <Link
                     key={item.id}
                     href={`/cases/${item.surgicalCase.id}`}
-                    className="flex flex-col gap-2 py-3 hover:bg-slate-50 -mx-2 px-2 rounded sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/70 -mx-2 px-2 rounded sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                         {isImage ? (
-                          <ImageIcon className="h-4 w-4 text-blue-700" />
+                          <ImageIcon className="h-4 w-4 text-blue-700 dark:text-blue-400" />
                         ) : (
-                          <FileText className="h-4 w-4 text-slate-700" />
+                          <FileText className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-900">
+                        <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                           {item.originalFilename}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          <span className="font-mono font-semibold text-blue-700">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <span className="font-mono font-semibold text-blue-700 dark:text-blue-400">
                             {item.surgicalCase.caseNumber}
                           </span>{" "}
-                          &middot; {item.surgicalCase.diagnosis || "Untitled"}{" "}
-                          &middot; {formatDate(item.createdAt)}
+                          &middot;{" "}
+                          {item.surgicalCase.diagnosis ||
+                            dict.dashboard.untitledDiagnosis}{" "}
+                          &middot; {formatDate(item.createdAt, undefined, locale)}
                         </p>
                       </div>
                     </div>
@@ -146,7 +149,7 @@ export default async function MediaLibraryPage({
                         </Badge>
                       )}
                       <Badge variant="secondary">
-                        {MEDIA_CATEGORY_LABELS[item.category]}
+                        {getMediaCategoryLabel(item.category, locale)}
                       </Badge>
                     </div>
                   </Link>

@@ -47,10 +47,10 @@ export default async function EditCasePage({
             Back to {surgicalCase.caseNumber}
           </Link>
         </Button>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Edit {surgicalCase.caseNumber}
         </h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
           {surgicalCase.diagnosis || "Untitled surgical case"}
         </p>
       </div>

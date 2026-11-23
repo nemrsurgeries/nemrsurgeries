@@ -103,6 +103,7 @@ export function CaseMediaPanel({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0 });
+  const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
 
   // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<CaseMediaItem | null>(null);
@@ -306,6 +307,46 @@ export function CaseMediaPanel({
   const activeLightboxItem =
     lightboxIndex >= 0 ? imageItems[lightboxIndex] : null;
 
+  // Keyboard shortcuts for Lightbox & PDF preview
+  useEffect(() => {
+    if (!lightboxMediaId && !pdfPreviewMedia) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setLightboxMediaId(null);
+        setPdfPreviewMedia(null);
+        return;
+      }
+      if (!lightboxMediaId) return;
+
+      if (e.key === "ArrowLeft" && imageItems.length > 1 && lightboxIndex >= 0) {
+        const prev = (lightboxIndex - 1 + imageItems.length) % imageItems.length;
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+        setLightboxMediaId(imageItems[prev]!.id);
+      } else if (
+        e.key === "ArrowRight" &&
+        imageItems.length > 1 &&
+        lightboxIndex >= 0
+      ) {
+        const next = (lightboxIndex + 1) % imageItems.length;
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+        setLightboxMediaId(imageItems[next]!.id);
+      } else if (e.key === "+" || e.key === "=") {
+        setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)));
+      } else if (e.key === "-") {
+        setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)));
+      } else if (e.key === "0") {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxMediaId, pdfPreviewMedia, imageItems, lightboxIndex]);
+
   function canDeleteItem(item: CaseMediaItem): boolean {
     if (role === "OWNER") return true;
     if (role === "EDITOR") return item.uploadedBy === currentUserId;
@@ -354,12 +395,12 @@ export function CaseMediaPanel({
               </div>
             </div>
 
-            <label className="flex items-start gap-2.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 cursor-pointer">
+            <label className="flex items-start gap-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={deidentifiedConfirmed}
                 onChange={(e) => setDeidentifiedConfirmed(e.target.checked)}
-                className="mt-0.5 rounded border-slate-300"
+                className="mt-0.5 rounded border-slate-300 dark:border-slate-700"
               />
               <span>
                 I confirm these medical images/documents have been checked for
@@ -380,15 +421,15 @@ export function CaseMediaPanel({
               }}
               className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-8 text-center transition-colors ${
                 dragging
-                  ? "border-blue-600 bg-blue-50/60"
-                  : "border-slate-200 bg-slate-50/40 hover:border-slate-300"
+                  ? "border-blue-600 bg-blue-50/60 dark:bg-blue-950/40"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/30 hover:border-slate-300 dark:hover:border-slate-600"
               }`}
             >
-              <UploadCloud className="h-7 w-7 text-slate-400 mb-2" />
-              <p className="text-sm font-medium text-slate-800">
+              <UploadCloud className="h-7 w-7 text-slate-400 dark:text-slate-500 mb-2" />
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 Drag and drop X-rays, clinical photos, or PDF reports
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 JPEG, PNG, WebP, or PDF &middot; Multiple files supported
               </p>
               <input
@@ -418,7 +459,7 @@ export function CaseMediaPanel({
               </Button>
 
               {uploading && (
-                <div className="mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-slate-200">
+                <div className="mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div
                     className="h-full bg-blue-700 transition-all duration-150"
                     style={{ width: `${progress}%` }}
@@ -433,7 +474,7 @@ export function CaseMediaPanel({
       {/* Categorized Gallery */}
       {grouped.length === 0 ? (
         <Card>
-          <CardContent className="py-10 text-center text-sm text-slate-500">
+          <CardContent className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
             No medical attachments uploaded for this case yet.
           </CardContent>
         </Card>
@@ -456,7 +497,7 @@ export function CaseMediaPanel({
                   return (
                     <div
                       key={item.id}
-                      className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white"
+                      className="flex flex-col overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
                     >
                       <button
                         type="button"
@@ -471,7 +512,7 @@ export function CaseMediaPanel({
                             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                           />
                         ) : isImage ? (
-                          <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                          <Loader2 className="h-5 w-5 animate-spin text-slate-400 dark:text-slate-500" />
                         ) : (
                           <div className="flex flex-col items-center gap-1.5 text-slate-300">
                             <FileText className="h-9 w-9 text-blue-400" />
@@ -484,20 +525,20 @@ export function CaseMediaPanel({
 
                       <div className="flex flex-1 flex-col justify-between gap-2 p-3">
                         <div>
-                          <p className="truncate text-xs font-semibold text-slate-900">
+                          <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
                             {item.originalFilename}
                           </p>
                           {item.description && (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-slate-600">
+                            <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
                               {item.description}
                             </p>
                           )}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
                             <span>{formatBytes(item.fileSize)}</span>
                             <span>&middot;</span>
                             <span>{formatDate(item.createdAt)}</span>
                             {item.exifStripped && (
-                              <span className="inline-flex items-center gap-0.5 text-emerald-700">
+                              <span className="inline-flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400">
                                 <ShieldCheck className="h-3 w-3" />
                                 EXIF stripped
                               </span>
@@ -505,7 +546,7 @@ export function CaseMediaPanel({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-1 border-t border-slate-100 pt-2">
+                        <div className="flex items-center justify-end gap-1 border-t border-slate-100 dark:border-slate-800 pt-2">
                           <Button
                             type="button"
                             variant="ghost"
@@ -531,7 +572,7 @@ export function CaseMediaPanel({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                              className="h-7 px-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                               onClick={() => setDeleteTarget(item)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -560,7 +601,7 @@ export function CaseMediaPanel({
               <p className="truncate text-sm font-medium">
                 {activeLightboxItem.originalFilename}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 {MEDIA_CATEGORY_LABELS[activeLightboxItem.category]}
                 {activeLightboxItem.description
                   ? ` — ${activeLightboxItem.description}`
@@ -628,7 +669,12 @@ export function CaseMediaPanel({
           </div>
 
           <div
-            className="relative flex flex-1 items-center justify-center overflow-hidden select-none"
+            className="relative flex flex-1 items-center justify-center overflow-hidden select-none touch-none"
+            onWheel={(e) => {
+              e.preventDefault();
+              const delta = e.deltaY < 0 ? 0.2 : -0.2;
+              setZoom((z) => Math.min(4, Math.max(0.5, +(z + delta).toFixed(2))));
+            }}
             onMouseDown={(e) => {
               setIsPanning(true);
               panStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
@@ -642,6 +688,46 @@ export function CaseMediaPanel({
             }}
             onMouseUp={() => setIsPanning(false)}
             onMouseLeave={() => setIsPanning(false)}
+            onTouchStart={(e) => {
+              if (e.touches.length === 2) {
+                const dx = e.touches[0]!.clientX - e.touches[1]!.clientX;
+                const dy = e.touches[0]!.clientY - e.touches[1]!.clientY;
+                pinchStartRef.current = {
+                  distance: Math.hypot(dx, dy),
+                  zoom,
+                };
+                setIsPanning(false);
+              } else if (e.touches.length === 1) {
+                pinchStartRef.current = null;
+                setIsPanning(true);
+                panStartRef.current = {
+                  x: e.touches[0]!.clientX - pan.x,
+                  y: e.touches[0]!.clientY - pan.y,
+                };
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length === 2 && pinchStartRef.current) {
+                const dx = e.touches[0]!.clientX - e.touches[1]!.clientX;
+                const dy = e.touches[0]!.clientY - e.touches[1]!.clientY;
+                const dist = Math.hypot(dx, dy);
+                if (pinchStartRef.current.distance > 0) {
+                  const nextZoom =
+                    pinchStartRef.current.zoom *
+                    (dist / pinchStartRef.current.distance);
+                  setZoom(Math.min(4, Math.max(0.5, +nextZoom.toFixed(2))));
+                }
+              } else if (e.touches.length === 1 && isPanning) {
+                setPan({
+                  x: e.touches[0]!.clientX - panStartRef.current.x,
+                  y: e.touches[0]!.clientY - panStartRef.current.y,
+                });
+              }
+            }}
+            onTouchEnd={() => {
+              pinchStartRef.current = null;
+              setIsPanning(false);
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -698,13 +784,13 @@ export function CaseMediaPanel({
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white dark:bg-slate-900 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">
+                <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {pdfPreviewMedia.item.originalFilename}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {MEDIA_CATEGORY_LABELS[pdfPreviewMedia.item.category]}
                 </p>
               </div>

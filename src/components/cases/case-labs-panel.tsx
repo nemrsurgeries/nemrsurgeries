@@ -214,9 +214,9 @@ export function CaseLabsPanel({
         {showForm && canEdit && (
           <form
             onSubmit={handleSubmit}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-4 space-y-3"
           >
-            <p className="text-xs font-semibold text-slate-800">
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               {editingId ? "Edit Laboratory Result" : "New Laboratory Result"}
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -326,14 +326,14 @@ export function CaseLabsPanel({
         )}
 
         {sorted.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">
+          <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
             No laboratory results recorded for this case yet.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs font-medium uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="py-2 pe-4 text-start">Test</th>
                   <th className="py-2 pe-4 text-start">Result</th>
                   <th className="py-2 pe-4 text-start">Reference Range</th>
@@ -342,26 +342,26 @@ export function CaseLabsPanel({
                   {canEdit && <th className="py-2 text-end">Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {sorted.map((lab) => (
                   <tr key={lab.id}>
                     <td className="py-2.5 pe-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
                         {lab.testName}
                       </p>
                       {lab.notes && (
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           {lab.notes}
                         </p>
                       )}
                     </td>
-                    <td className="py-2.5 pe-4 font-medium tabular-nums text-slate-900">
+                    <td className="py-2.5 pe-4 font-medium tabular-nums text-slate-900 dark:text-slate-100">
                       {lab.result} {lab.unit ?? ""}
                     </td>
-                    <td className="py-2.5 pe-4 text-slate-600">
+                    <td className="py-2.5 pe-4 text-slate-600 dark:text-slate-300">
                       {lab.referenceRange || "—"}
                     </td>
-                    <td className="py-2.5 pe-4 whitespace-nowrap text-slate-600">
+                    <td className="py-2.5 pe-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
                       {formatDate(lab.testDate)}
                     </td>
                     <td className="py-2.5 pe-4">
@@ -369,13 +369,13 @@ export function CaseLabsPanel({
                         <button
                           type="button"
                           onClick={() => openAttachment(lab.attachment!.id)}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:underline cursor-pointer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           View PDF
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-400">—</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
                       )}
                     </td>
                     {canEdit && (
@@ -395,7 +395,7 @@ export function CaseLabsPanel({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-red-600 hover:text-red-700"
+                          className="h-7 px-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                           aria-label={`Delete ${lab.testName} result`}
                           title="Delete result"
                           onClick={() => setDeleteId(lab.id)}

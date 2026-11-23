@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Toaster } from "sonner";
+import {
+  THEME_STORAGE_KEY,
+  ThemeProvider,
+} from "@/components/theme/theme-provider";
+import { LocaleProvider } from "@/components/i18n/locale-provider";
+import { getServerI18n } from "@/lib/i18n/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,16 +16,24 @@ export const metadata: Metadata = {
     "Private surgical case documentation, medical media organization, follow-up tracking, and selective colleague collaboration for orthopedic surgeons.",
 };
 
-export default function RootLayout({
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)})||"system";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { locale, dir } = await getServerI18n();
+
   return (
-    <html lang="en" dir="ltr">
+    <html lang={locale} dir={dir} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-        <Toaster position="top-right" richColors closeButton />
+        <LocaleProvider initialLocale={locale}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

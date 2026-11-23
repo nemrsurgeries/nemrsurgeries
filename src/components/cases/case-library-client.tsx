@@ -15,8 +15,14 @@ import {
   X,
 } from "lucide-react";
 import type { CaseStatus, PatientSex, SurgicalRole } from "@prisma/client";
-import { CASE_STATUS_META, SURGICAL_ROLE_LABELS } from "@/modules/cases/labels";
+import {
+  CASE_STATUS_META,
+  getCaseStatusLabel,
+  getSurgicalRoleLabel,
+} from "@/modules/cases/labels";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { formatDate } from "@/lib/utils";
+import { useLocalStorage } from "@/lib/use-local-storage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +72,8 @@ interface CaseLibraryClientProps {
   };
 }
 
+const VIEW_MODES = ["table", "cards"] as const;
+
 export function CaseLibraryClient({
   items,
   total,
@@ -76,8 +84,13 @@ export function CaseLibraryClient({
 }: CaseLibraryClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale, dict } = useLocale();
 
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [viewMode, setViewMode] = useLocalStorage<"table" | "cards">(
+    "orthocase-cases-view",
+    "table",
+    VIEW_MODES,
+  );
   const [showFilters, setShowFilters] = useState(
     Boolean(
       initialFilters.status ||
@@ -166,18 +179,21 @@ export function CaseLibraryClient({
             className="flex flex-col gap-3 lg:flex-row lg:items-center"
           >
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <Input
+                id="cases-search"
+                name="q"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search by Case ID, diagnosis, procedure, classification, surgeon, or hospital..."
+                placeholder={dict.cases.searchPlaceholder}
+                aria-label={dict.common.search}
                 className="ps-9"
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button type="submit" size="sm">
-                Search
+                {dict.common.search}
               </Button>
               <Button
                 type="button"
@@ -186,34 +202,36 @@ export function CaseLibraryClient({
                 onClick={() => setShowFilters((s) => !s)}
               >
                 <Filter className="h-3.5 w-3.5" />
-                Filters
+                {dict.common.filters}
               </Button>
 
               <NativeSelect
+                id="cases-sort"
+                name="sort"
                 value={sort}
                 onChange={(e) => {
                   setSort(e.target.value);
                   applyFilters({ sort: e.target.value });
                 }}
-                aria-label="Sort cases"
-                className="h-8 w-44 text-xs"
+                aria-label={dict.cases.sortUpdatedDesc}
+                className="h-8 w-full sm:w-44 text-xs"
               >
-                <option value="updated_desc">Recently updated</option>
-                <option value="operation_desc">Operation date (newest)</option>
-                <option value="operation_asc">Operation date (oldest)</option>
-                <option value="case_number_desc">Case ID (descending)</option>
+                <option value="updated_desc">{dict.cases.sortUpdatedDesc}</option>
+                <option value="operation_desc">{dict.cases.sortOpDesc}</option>
+                <option value="operation_asc">{dict.cases.sortOpAsc}</option>
+                <option value="case_number_desc">{dict.cases.sortCaseDesc}</option>
               </NativeSelect>
 
-              <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+              <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5">
                 <button
                   type="button"
                   onClick={() => setViewMode("table")}
                   className={`inline-flex h-7 w-7 items-center justify-center rounded cursor-pointer ${
                     viewMode === "table"
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-500 hover:text-slate-900"
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
-                  aria-label="Table view"
+                  aria-label={dict.cases.tableView}
                 >
                   <List className="h-3.5 w-3.5" />
                 </button>
@@ -222,10 +240,10 @@ export function CaseLibraryClient({
                   onClick={() => setViewMode("cards")}
                   className={`inline-flex h-7 w-7 items-center justify-center rounded cursor-pointer ${
                     viewMode === "cards"
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-500 hover:text-slate-900"
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
-                  aria-label="Card view"
+                  aria-label={dict.cases.cardView}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" />
                 </button>
@@ -234,50 +252,56 @@ export function CaseLibraryClient({
           </form>
 
           {showFilters && (
-            <div className="border-t border-slate-200 pt-4 space-y-3">
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-1">
                   <Label htmlFor="filter-status" className="text-xs">
-                    Status
+                    {dict.cases.status}
                   </Label>
                   <NativeSelect
                     id="filter-status"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                   >
-                    <option value="">All active statuses</option>
-                    <option value="DRAFT">Draft</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="AWAITING_FOLLOWUP">Awaiting Follow-up</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="ARCHIVED">Archived</option>
+                    <option value="">{dict.cases.allStatuses}</option>
+                    <option value="DRAFT">{getCaseStatusLabel("DRAFT", locale)}</option>
+                    <option value="IN_PROGRESS">{getCaseStatusLabel("IN_PROGRESS", locale)}</option>
+                    <option value="AWAITING_FOLLOWUP">
+                      {getCaseStatusLabel("AWAITING_FOLLOWUP", locale)}
+                    </option>
+                    <option value="COMPLETED">{getCaseStatusLabel("COMPLETED", locale)}</option>
+                    <option value="ARCHIVED">{getCaseStatusLabel("ARCHIVED", locale)}</option>
                   </NativeSelect>
                 </div>
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-role" className="text-xs">
-                    My Surgical Role
+                    {dict.cases.myRole}
                   </Label>
                   <NativeSelect
                     id="filter-role"
                     value={myRole}
                     onChange={(e) => setMyRole(e.target.value)}
                   >
-                    <option value="">Any role</option>
-                    <option value="OPERATOR">Operator</option>
-                    <option value="FIRST_ASSISTANT">First Assistant</option>
-                    <option value="ASSISTANT">Assistant</option>
+                    <option value="">{dict.cases.allRoles}</option>
+                    <option value="OPERATOR">{getSurgicalRoleLabel("OPERATOR", locale)}</option>
+                    <option value="FIRST_ASSISTANT">
+                      {getSurgicalRoleLabel("FIRST_ASSISTANT", locale)}
+                    </option>
+                    <option value="ASSISTANT">{getSurgicalRoleLabel("ASSISTANT", locale)}</option>
                   </NativeSelect>
                 </div>
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-hospital" className="text-xs">
-                    Hospital
+                    {dict.cases.hospital}
                   </Label>
                   <Input
                     id="filter-hospital"
                     list="hospital-suggestions"
-                    placeholder="Filter by hospital"
+                    placeholder={
+                      locale === "ar" ? "تصفية حسب المستشفى" : "Filter by hospital"
+                    }
                     value={hospital}
                     onChange={(e) => setHospital(e.target.value)}
                   />
@@ -290,11 +314,13 @@ export function CaseLibraryClient({
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-surgeon" className="text-xs">
-                    Responsible Surgeon
+                    {dict.cases.surgeon}
                   </Label>
                   <Input
                     id="filter-surgeon"
-                    placeholder="Filter by surgeon"
+                    placeholder={
+                      locale === "ar" ? "تصفية حسب الجراح" : "Filter by surgeon"
+                    }
                     value={surgeon}
                     onChange={(e) => setSurgeon(e.target.value)}
                   />
@@ -302,7 +328,7 @@ export function CaseLibraryClient({
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-procedure" className="text-xs">
-                    Procedure
+                    {dict.cases.procedure}
                   </Label>
                   <Input
                     id="filter-procedure"
@@ -314,7 +340,7 @@ export function CaseLibraryClient({
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-from" className="text-xs">
-                    Operation Date (From)
+                    {dict.cases.dateFrom}
                   </Label>
                   <Input
                     id="filter-from"
@@ -326,7 +352,7 @@ export function CaseLibraryClient({
 
                 <div className="space-y-1">
                   <Label htmlFor="filter-to" className="text-xs">
-                    Operation Date (To)
+                    {dict.cases.dateTo}
                   </Label>
                   <Input
                     id="filter-to"
@@ -346,7 +372,7 @@ export function CaseLibraryClient({
                     onClick={clearFilters}
                   >
                     <X className="h-3.5 w-3.5" />
-                    Clear filters
+                    {dict.common.clearFilters}
                   </Button>
                 )}
                 <Button
@@ -354,7 +380,7 @@ export function CaseLibraryClient({
                   size="sm"
                   onClick={() => applyFilters()}
                 >
-                  Apply Filters
+                  {dict.cases.applyFilters}
                 </Button>
               </div>
             </div>
@@ -363,19 +389,21 @@ export function CaseLibraryClient({
       </Card>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>
-          Showing <strong className="text-slate-800">{items.length}</strong> of{" "}
-          <strong className="text-slate-800">{total}</strong> owned surgical
-          case{total === 1 ? "" : "s"}
+          {dict.cases.showingOf}{" "}
+          <strong className="text-slate-800 dark:text-slate-200">{items.length}</strong>{" "}
+          {dict.cases.of}{" "}
+          <strong className="text-slate-800 dark:text-slate-200">{total}</strong>{" "}
+          {dict.cases.ownedCasesLabel}
         </span>
         {hasActiveFilters && (
           <button
             type="button"
             onClick={clearFilters}
-            className="text-blue-700 hover:underline cursor-pointer"
+            className="text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
           >
-            Reset all filters
+            {dict.common.clearFilters}
           </button>
         )}
       </div>
@@ -384,29 +412,27 @@ export function CaseLibraryClient({
       {items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-14 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mb-3">
               <FolderOpen className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {hasActiveFilters
-                ? "No matching surgical cases"
-                : "Your surgical case library is empty"}
+                ? dict.cases.noMatchingCases
+                : dict.dashboard.noCasesYet}
             </h3>
-            <p className="mt-1 max-w-sm text-sm text-slate-500">
-              {hasActiveFilters
-                ? "Try adjusting your search query or clearing active filters."
-                : "Create your first structured surgical case to begin documenting procedures, implants, and follow-up outcomes."}
+            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+              {dict.cases.noMatchingHint}
             </p>
             <div className="mt-4 flex items-center gap-2">
               {hasActiveFilters ? (
                 <Button variant="outline" size="sm" onClick={clearFilters}>
-                  Clear Filters
+                  {dict.common.clearFilters}
                 </Button>
               ) : (
                 <Button asChild size="sm">
                   <Link href="/cases/new">
                     <Plus className="h-4 w-4" />
-                    Create First Case
+                    {dict.dashboard.createFirstCase}
                   </Link>
                 </Button>
               )}
@@ -418,27 +444,27 @@ export function CaseLibraryClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
-                  <th className="px-4 py-3 text-start">Case ID</th>
-                  <th className="px-4 py-3 text-start">Diagnosis &amp; Procedure</th>
-                  <th className="px-4 py-3 text-start">Classification</th>
-                  <th className="px-4 py-3 text-start">Operation Date</th>
-                  <th className="px-4 py-3 text-start">Role / Hospital</th>
-                  <th className="px-4 py-3 text-start">Status</th>
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-start">{dict.cases.colCaseId}</th>
+                  <th className="px-4 py-3 text-start">{dict.cases.colDiagnosisProc}</th>
+                  <th className="px-4 py-3 text-start">{dict.wizard.fractureClassification}</th>
+                  <th className="px-4 py-3 text-start">{dict.cases.colOpDate}</th>
+                  <th className="px-4 py-3 text-start">{dict.cases.colRoleHospital}</th>
+                  <th className="px-4 py-3 text-start">{dict.cases.colStatus}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                 {items.map((c) => {
                   const statusMeta = CASE_STATUS_META[c.status];
                   return (
                     <tr
                       key={c.id}
-                      className="hover:bg-slate-50/80 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/70 transition-colors"
                     >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Link
                           href={`/cases/${c.id}`}
-                          className="font-mono text-xs font-semibold text-blue-700 hover:underline"
+                          className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 hover:underline"
                         >
                           {c.caseNumber}
                         </Link>
@@ -446,46 +472,48 @@ export function CaseLibraryClient({
                       <td className="px-4 py-3 min-w-[220px]">
                         <Link
                           href={`/cases/${c.id}`}
-                          className="font-medium text-slate-900 hover:text-blue-700 block"
+                          className="font-medium text-slate-900 dark:text-slate-100 hover:text-blue-700 dark:hover:text-blue-300 block"
                         >
                           {c.diagnosis || "Untitled diagnosis"}
                         </Link>
-                        <p className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-xs">
                           {c.procedure || "No procedure recorded"}
                         </p>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-700">
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-700 dark:text-slate-300">
                         {c.fractureClassification ? (
                           <div>
                             <span className="font-medium">
                               {c.fractureClassification}
                             </span>
                             {c.classificationSystem && (
-                              <span className="block text-xs text-slate-500">
+                              <span className="block text-xs text-slate-500 dark:text-slate-400">
                                 {c.classificationSystem}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-700">
-                        {formatDate(c.operationDate)}
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-700 dark:text-slate-300">
+                        {formatDate(c.operationDate, undefined, locale)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">
+                      <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
                         <div>
-                          {c.myRole ? SURGICAL_ROLE_LABELS[c.myRole] : "—"}
+                          {c.myRole
+                            ? getSurgicalRoleLabel(c.myRole, locale)
+                            : "—"}
                         </div>
                         {c.hospital && (
-                          <div className="text-slate-400 truncate max-w-[160px]">
+                          <div className="text-slate-400 dark:text-slate-500 truncate max-w-[160px]">
                             {c.hospital}
                           </div>
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Badge variant={statusMeta.variant}>
-                          {statusMeta.label}
+                          {getCaseStatusLabel(c.status, locale)}
                         </Badge>
                       </td>
                     </tr>
@@ -501,40 +529,43 @@ export function CaseLibraryClient({
             const statusMeta = CASE_STATUS_META[c.status];
             return (
               <Link key={c.id} href={`/cases/${c.id}`} className="group block">
-                <Card className="h-full transition-colors group-hover:border-blue-300">
+                <Card className="h-full transition-colors group-hover:border-blue-300 dark:group-hover:border-blue-700">
                   <CardContent className="p-4 flex h-full flex-col justify-between gap-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-semibold text-blue-700">
+                        <span className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400">
                           {c.caseNumber}
                         </span>
                         <Badge variant={statusMeta.variant}>
-                          {statusMeta.label}
+                          {getCaseStatusLabel(c.status, locale)}
                         </Badge>
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
-                          {c.diagnosis || "Untitled diagnosis"}
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-700 dark:group-hover:text-blue-400 line-clamp-2">
+                          {c.diagnosis || dict.dashboard.untitledDiagnosis}
                         </h3>
-                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
-                          {c.procedure || "No procedure recorded"}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+                          {c.procedure || dict.common.none}
                         </p>
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-100 pt-2.5 text-xs text-slate-500 space-y-1">
+                    <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 text-xs text-slate-500 dark:text-slate-400 space-y-1">
                       <div className="flex items-center justify-between">
-                        <span>Operation: {formatDate(c.operationDate)}</span>
+                        <span>
+                          {formatDate(c.operationDate, undefined, locale)}
+                        </span>
                         {c.fractureClassification && (
-                          <span className="font-medium text-slate-700">
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
                             {c.fractureClassification}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-400">
-                        <span>{c.hospital || "No hospital"}</span>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                        <span>{c.hospital || dict.common.none}</span>
                         <span>
-                          {c._count.implants} imp &middot; {c._count.followups} f/u
+                          {c._count.implants} {dict.cases.implantsCount} &middot;{" "}
+                          {c._count.followups} {dict.cases.followupsCount}
                         </span>
                       </div>
                     </div>
@@ -549,7 +580,7 @@ export function CaseLibraryClient({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Page {page} of {totalPages}
           </p>
           <div className="flex items-center gap-2">

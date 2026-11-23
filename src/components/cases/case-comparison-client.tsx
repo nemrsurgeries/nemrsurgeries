@@ -101,7 +101,7 @@ export function CaseComparisonClient({
         </CardHeader>
         <CardContent className="space-y-4">
           {selectable.length === 0 ? (
-            <p className="text-sm text-slate-500 py-4 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-4 text-center">
               No cases available to compare yet.
             </p>
           ) : (
@@ -114,8 +114,8 @@ export function CaseComparisonClient({
                       key={c.id}
                       className={`flex items-start gap-2 rounded-md border p-2.5 text-xs cursor-pointer transition-colors ${
                         active
-                          ? "border-blue-600 bg-blue-50/70"
-                          : "border-slate-200 bg-white hover:bg-slate-50"
+                          ? "border-blue-600 bg-blue-50/70 dark:bg-blue-950/40"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70"
                       }`}
                     >
                       <input
@@ -123,18 +123,18 @@ export function CaseComparisonClient({
                         checked={active}
                         disabled={!active && picked.length >= 4}
                         onChange={() => togglePick(c.id)}
-                        className="mt-0.5 rounded border-slate-300"
+                        className="mt-0.5 rounded border-slate-300 dark:border-slate-700"
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-semibold text-blue-700">
+                          <span className="font-mono font-semibold text-blue-700 dark:text-blue-400">
                             {c.caseNumber}
                           </span>
                           <Badge variant="outline" className="text-[10px]">
                             {c.source}
                           </Badge>
                         </div>
-                        <p className="truncate font-medium text-slate-800 mt-0.5">
+                        <p className="truncate font-medium text-slate-800 dark:text-slate-200 mt-0.5">
                           {c.diagnosis || "Untitled"}
                         </p>
                       </div>
@@ -163,15 +163,15 @@ export function CaseComparisonClient({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="w-40 px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+                  <th className="sticky start-0 z-10 w-36 sm:w-40 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Field
                   </th>
                   {compared.map((c) => (
                     <th key={c.id} className="min-w-[220px] px-4 py-3 text-start">
                       <Link
                         href={`/cases/${c.id}`}
-                        className="font-mono text-xs font-semibold text-blue-700 hover:underline"
+                        className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 hover:underline"
                       >
                         {c.caseNumber}
                       </Link>
@@ -184,23 +184,23 @@ export function CaseComparisonClient({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white align-top">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 align-top">
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Diagnosis
                   </td>
                   {compared.map((c) => (
-                    <td key={c.id} className="px-4 py-3 font-medium text-slate-900">
+                    <td key={c.id} className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {c.diagnosis || "—"}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Classification
                   </td>
                   {compared.map((c) => (
-                    <td key={c.id} className="px-4 py-3 text-slate-700">
+                    <td key={c.id} className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {c.fractureClassification || "—"}
                       {c.classificationSystem
                         ? ` (${c.classificationSystem})`
@@ -209,21 +209,21 @@ export function CaseComparisonClient({
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Procedure
                   </td>
                   {compared.map((c) => (
-                    <td key={c.id} className="px-4 py-3 text-slate-700">
+                    <td key={c.id} className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {c.procedure || "—"}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Operation Date &amp; Role
                   </td>
                   {compared.map((c) => (
-                    <td key={c.id} className="px-4 py-3 text-xs text-slate-600">
+                    <td key={c.id} className="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
                       <div>{formatDate(c.operationDate)}</div>
                       <div>
                         {c.myRole ? SURGICAL_ROLE_LABELS[c.myRole] : "—"} &middot;{" "}
@@ -233,11 +233,11 @@ export function CaseComparisonClient({
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Implants
                   </td>
                   {compared.map((c) => (
-                    <td key={c.id} className="px-4 py-3 text-xs text-slate-700">
+                    <td key={c.id} className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
                       {c.implants.length === 0 ? (
                         "—"
                       ) : (
@@ -256,23 +256,23 @@ export function CaseComparisonClient({
                   ))}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Latest Follow-up
                   </td>
                   {compared.map((c) => {
                     const latest = c.followups[0];
                     return (
-                      <td key={c.id} className="px-4 py-3 text-xs text-slate-700">
+                      <td key={c.id} className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300">
                         {latest ? (
                           <div className="space-y-1">
-                            <p className="font-semibold text-slate-900">
+                            <p className="font-semibold text-slate-900 dark:text-slate-100">
                               {formatDate(latest.followupDate)}
                             </p>
                             {latest.clinicalOutcome && (
                               <p>{latest.clinicalOutcome}</p>
                             )}
                             {latest.radiologicalOutcome && (
-                              <p className="text-slate-500">
+                              <p className="text-slate-500 dark:text-slate-400">
                                 XR: {latest.radiologicalOutcome}
                               </p>
                             )}
@@ -285,13 +285,13 @@ export function CaseComparisonClient({
                   })}
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 shadow-[1px_0_0_0_var(--border)]">
                     Learning Points
                   </td>
                   {compared.map((c) => (
                     <td
                       key={c.id}
-                      className="px-4 py-3 text-xs text-slate-700 whitespace-pre-wrap"
+                      className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
                     >
                       {c.learningPoints || "—"}
                     </td>

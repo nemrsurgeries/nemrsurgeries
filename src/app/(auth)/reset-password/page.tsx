@@ -91,7 +91,7 @@ function ResetPasswordForm() {
           {error && (
             <div
               role="alert"
-              className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="rounded-md border border-red-200 dark:border-red-800/70 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-400"
             >
               {error}
             </div>
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <Card>
-          <CardContent className="p-6 text-sm text-slate-500">
+          <CardContent className="p-6 text-sm text-slate-500 dark:text-slate-400">
             Loading...
           </CardContent>
         </Card>

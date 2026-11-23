@@ -12,11 +12,13 @@ export function formatDate(
     month: "short",
     day: "numeric",
   },
+  locale: "en" | "ar" = "en",
 ): string {
   if (!date) return "—";
   const d = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-US", options).format(d);
+  const intlLocale = locale === "ar" ? "ar-EG" : "en-US";
+  return new Intl.DateTimeFormat(intlLocale, options).format(d);
 }
 
 export function getInitials(name: string | null | undefined): string {

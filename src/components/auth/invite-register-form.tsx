@@ -84,7 +84,7 @@ export function InviteRegisterForm({
       <CardHeader>
         <CardTitle>Create your doctor account</CardTitle>
         <CardDescription>
-          Invited by <span className="font-medium text-slate-800">{inviterName}</span>
+          Invited by <span className="font-medium text-slate-800 dark:text-slate-200">{inviterName}</span>
           {inviterHospital ? ` (${inviterHospital})` : ""}. Your account includes
           your own private surgical case library.
         </CardDescription>
@@ -93,7 +93,7 @@ export function InviteRegisterForm({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {pendingShareCount > 0 && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+            <div className="rounded-md border border-blue-200 dark:border-blue-800/70 bg-blue-50 dark:bg-blue-950/50 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
               {pendingShareCount === 1
                 ? "1 surgical case will be shared with you automatically once you complete registration."
                 : `${pendingShareCount} surgical cases will be shared with you automatically once you complete registration.`}
@@ -103,7 +103,7 @@ export function InviteRegisterForm({
           {error && (
             <div
               role="alert"
-              className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="rounded-md border border-red-200 dark:border-red-800/70 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-400"
             >
               {error}
             </div>

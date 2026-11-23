@@ -9,6 +9,7 @@ import {
   revokeInvitationAction,
 } from "@/modules/invitations/actions";
 import { formatDate } from "@/lib/utils";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,8 @@ export function InvitationsPanel({
   invitations: InvitationRow[];
 }) {
   const router = useRouter();
+  const { locale } = useLocale();
+  const isAr = locale === "ar";
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [devInviteUrl, setDevInviteUrl] = useState<string | null>(null);
@@ -52,14 +55,17 @@ export function InvitationsPanel({
     try {
       const res = await createInvitationAction({ email });
       if (!res.success) {
-        toast.error(res.error ?? "Unable to send invitation.");
+        toast.error(
+          res.error ??
+            (isAr ? "تعذر إرسال الدعوة." : "Unable to send invitation."),
+        );
         return;
       }
       setEmail("");
       if (res.inviteUrl) {
         setDevInviteUrl(res.inviteUrl);
       }
-      toast.success("Invitation sent");
+      toast.success(isAr ? "تم إرسال الدعوة" : "Invitation sent");
       router.refresh();
     } finally {
       setSending(false);
@@ -69,10 +75,13 @@ export function InvitationsPanel({
   async function handleRevoke(id: string) {
     const res = await revokeInvitationAction(id);
     if (!res.success) {
-      toast.error(res.error ?? "Unable to revoke invitation.");
+      toast.error(
+        res.error ??
+          (isAr ? "تعذر إلغاء الدعوة." : "Unable to revoke invitation."),
+      );
       return;
     }
-    toast.success("Invitation revoked");
+    toast.success(isAr ? "تم إلغاء الدعوة" : "Invitation revoked");
     router.refresh();
   }
 
@@ -89,15 +98,29 @@ export function InvitationsPanel({
     }
   }
 
+  function statusLabel(status: InvitationRow["status"]) {
+    if (!isAr) return status;
+    switch (status) {
+      case "ACCEPTED":
+        return "مقبولة";
+      case "PENDING":
+        return "معلقة";
+      case "REVOKED":
+        return "مُلغاة";
+      case "EXPIRED":
+        return "منتهية";
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Invite a Colleague</CardTitle>
+          <CardTitle>{isAr ? "دعوة زميل" : "Invite a Colleague"}</CardTitle>
           <CardDescription>
-            Send a single-use invitation link. The invited doctor will receive
-            their own independent private case library and will not see your
-            cases unless you explicitly share them.
+            {isAr
+              ? "أرسل رابط دعوة صالحاً لمرة واحدة. سيحصل الطبيب المدعو على مكتبة حالات خاصة ومستقلة ولن يرى حالاتك إلا عند مشاركتها صراحةً."
+              : "Send a single-use invitation link. The invited doctor will receive their own independent private case library and will not see your cases unless you explicitly share them."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -106,7 +129,9 @@ export function InvitationsPanel({
             className="flex flex-col gap-3 sm:flex-row sm:items-end"
           >
             <div className="flex-1 space-y-1.5">
-              <Label htmlFor="colleague-email">Doctor&apos;s email address</Label>
+              <Label htmlFor="colleague-email">
+                {isAr ? "البريد الإلكتروني للطبيب" : "Doctor's email address"}
+              </Label>
               <Input
                 id="colleague-email"
                 type="email"
@@ -122,17 +147,19 @@ export function InvitationsPanel({
               ) : (
                 <MailPlus className="h-4 w-4" />
               )}
-              Send Invitation
+              {isAr ? "إرسال الدعوة" : "Send Invitation"}
             </Button>
           </form>
 
           {devInviteUrl && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+            <div className="rounded-md border border-blue-200 dark:border-blue-800/70 bg-blue-50 dark:bg-blue-950/50 p-3 text-xs text-blue-900 dark:text-blue-200">
               <p className="font-medium mb-1">
-                Development invitation link (also logged to server console):
+                {isAr
+                  ? "رابط الدعوة للتطوير (مسجل أيضاً في وحدة تحكم الخادم):"
+                  : "Development invitation link (also logged to server console):"}
               </p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 truncate rounded bg-white px-2 py-1 border border-blue-200">
+                <code className="flex-1 truncate rounded bg-white dark:bg-slate-900 px-2 py-1 border border-blue-200 dark:border-blue-800/70">
                   {devInviteUrl}
                 </code>
                 <Button
@@ -141,11 +168,11 @@ export function InvitationsPanel({
                   variant="outline"
                   onClick={() => {
                     navigator.clipboard.writeText(devInviteUrl);
-                    toast.success("Link copied");
+                    toast.success(isAr ? "تم نسخ الرابط" : "Link copied");
                   }}
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  Copy
+                  {isAr ? "نسخ" : "Copy"}
                 </Button>
               </div>
             </div>
@@ -155,48 +182,64 @@ export function InvitationsPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle>Sent Invitations</CardTitle>
+          <CardTitle>{isAr ? "الدعوات المُرسلة" : "Sent Invitations"}</CardTitle>
           <CardDescription>
-            Track pending, accepted, expired, and revoked invitations.
+            {isAr
+              ? "تابع الدعوات المعلقة والمقبولة والمنتهية والمُلغاة."
+              : "Track pending, accepted, expired, and revoked invitations."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {invitations.length === 0 ? (
-            <p className="text-sm text-slate-500 py-6 text-center">
-              You have not sent any invitations yet.
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
+              {isAr
+                ? "لم تقم بإرسال أي دعوات بعد."
+                : "You have not sent any invitations yet."}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-start text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="py-2.5 pe-4 text-start">Recipient</th>
-                    <th className="py-2.5 pe-4 text-start">Status</th>
-                    <th className="py-2.5 pe-4 text-start">Expires</th>
-                    <th className="py-2.5 pe-4 text-start">Pending Shares</th>
-                    <th className="py-2.5 text-end">Action</th>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-start text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <th className="py-2.5 pe-4 text-start">
+                      {isAr ? "المستلم" : "Recipient"}
+                    </th>
+                    <th className="py-2.5 pe-4 text-start">
+                      {isAr ? "الحالة" : "Status"}
+                    </th>
+                    <th className="py-2.5 pe-4 text-start">
+                      {isAr ? "تاريخ الانتهاء" : "Expires"}
+                    </th>
+                    <th className="py-2.5 pe-4 text-start">
+                      {isAr ? "المشاركات المعلقة" : "Pending Shares"}
+                    </th>
+                    <th className="py-2.5 text-end">
+                      {isAr ? "إجراء" : "Action"}
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {invitations.map((inv) => (
                     <tr key={inv.id}>
-                      <td className="py-3 pe-4 font-medium text-slate-900">
+                      <td className="py-3 pe-4 font-medium text-slate-900 dark:text-slate-100">
                         {inv.email}
                       </td>
                       <td className="py-3 pe-4">
                         <Badge variant={statusVariant(inv.status)}>
-                          {inv.status}
+                          {statusLabel(inv.status)}
                         </Badge>
                       </td>
-                      <td className="py-3 pe-4 text-slate-600">
-                        {formatDate(inv.expiresAt)}
+                      <td className="py-3 pe-4 text-slate-600 dark:text-slate-300">
+                        {formatDate(inv.expiresAt, undefined, locale)}
                       </td>
-                      <td className="py-3 pe-4 text-slate-600">
+                      <td className="py-3 pe-4 text-slate-600 dark:text-slate-300">
                         {inv.pendingShares.length > 0
                           ? inv.pendingShares
                               .map((p) => p.surgicalCase.caseNumber)
                               .join(", ")
-                          : "None"}
+                          : isAr
+                            ? "لا يوجد"
+                            : "None"}
                       </td>
                       <td className="py-3 text-end">
                         {inv.status === "PENDING" ? (
@@ -204,13 +247,13 @@ export function InvitationsPanel({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRevoke(inv.id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                           >
                             <XCircle className="h-3.5 w-3.5" />
-                            Revoke
+                            {isAr ? "إلغاء" : "Revoke"}
                           </Button>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </td>
                     </tr>

@@ -169,9 +169,9 @@ export function CaseFollowupsPanel({
         {showForm && canEdit && (
           <form
             onSubmit={handleSubmit}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-4 space-y-3"
           >
-            <p className="text-xs font-semibold text-slate-800">
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
               {editingId ? "Edit Follow-up Entry" : "New Follow-up Visit"}
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -270,23 +270,23 @@ export function CaseFollowupsPanel({
         {followups.length === 0 ? (
           <div className="py-8 text-center">
             <CalendarClock className="mx-auto h-7 w-7 text-slate-300 mb-2" />
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               No follow-up visits documented yet.
             </p>
           </div>
         ) : (
-          <ol className="relative border-s border-slate-200 ms-2 space-y-5">
+          <ol className="relative border-s border-slate-200 dark:border-slate-800 ms-2 space-y-5">
             {followups.map((f) => (
               <li key={f.id} className="ms-5">
-                <span className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full border-2 border-white bg-blue-600" />
-                <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
+                <span className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600" />
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="font-semibold text-slate-900">
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
                         {formatDate(f.followupDate)}
                       </span>
                       {f.author && (
-                        <span className="text-slate-400">
+                        <span className="text-slate-400 dark:text-slate-500">
                           &middot; Recorded by {f.author.name}
                         </span>
                       )}
@@ -308,7 +308,7 @@ export function CaseFollowupsPanel({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-red-600 hover:text-red-700"
+                          className="h-7 px-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                           aria-label="Delete follow-up entry"
                           title="Delete follow-up"
                           onClick={() => setDeleteId(f.id)}
@@ -321,26 +321,26 @@ export function CaseFollowupsPanel({
 
                   {f.clinicalOutcome && (
                     <div className="text-sm">
-                      <span className="font-medium text-slate-700">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">
                         Clinical outcome:{" "}
                       </span>
-                      <span className="text-slate-600 whitespace-pre-wrap">
+                      <span className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
                         {f.clinicalOutcome}
                       </span>
                     </div>
                   )}
                   {f.radiologicalOutcome && (
                     <div className="text-sm">
-                      <span className="font-medium text-slate-700">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">
                         Radiological outcome:{" "}
                       </span>
-                      <span className="text-slate-600 whitespace-pre-wrap">
+                      <span className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
                         {f.radiologicalOutcome}
                       </span>
                     </div>
                   )}
                   {f.complications && (
-                    <div className="text-sm text-red-700">
+                    <div className="text-sm text-red-700 dark:text-red-400">
                       <span className="font-medium">Complications: </span>
                       <span className="whitespace-pre-wrap">
                         {f.complications}
@@ -348,7 +348,7 @@ export function CaseFollowupsPanel({
                     </div>
                   )}
                   {f.notes && (
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
                       {f.notes}
                     </p>
                   )}

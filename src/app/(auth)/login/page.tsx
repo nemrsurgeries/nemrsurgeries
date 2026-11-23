@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/modules/auth/auth-client";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { dict } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,15 +40,15 @@ export default function LoginPage() {
       });
 
       if (result.error) {
-        setError(result.error.message ?? "Invalid email or password.");
+        setError(result.error.message ?? dict.auth.invalidCredentials);
         return;
       }
 
-      toast.success("Signed in successfully");
+      toast.success(dict.auth.signInSuccess);
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Unable to sign in right now. Please try again.");
+      setError(dict.auth.signInError);
     } finally {
       setSubmitting(false);
     }
@@ -55,24 +57,22 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign in to your library</CardTitle>
-        <CardDescription>
-          Enter your credentials to access your private surgical cases.
-        </CardDescription>
+        <CardTitle>{dict.auth.signInTitle}</CardTitle>
+        <CardDescription>{dict.auth.signInDesc}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
             <div
               role="alert"
-              className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+              className="rounded-md border border-red-200 dark:border-red-800/70 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-400"
             >
               {error}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
+            <Label htmlFor="email">{dict.auth.emailLabel}</Label>
             <Input
               id="email"
               type="email"
@@ -86,12 +86,12 @@ export default function LoginPage() {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{dict.auth.passwordLabel}</Label>
               <Link
                 href="/forgot-password"
-                className="text-xs font-medium text-blue-700 hover:underline"
+                className="text-xs font-medium text-blue-700 dark:text-blue-400 hover:underline"
               >
-                Forgot password?
+                {dict.auth.forgotPasswordLink}
               </Link>
             </div>
             <div className="relative">
@@ -107,8 +107,12 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-500 hover:text-slate-700 cursor-pointer"
+                aria-label={
+                  showPassword
+                    ? dict.auth.hidePassword
+                    : dict.auth.showPassword
+                }
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -125,22 +129,22 @@ export default function LoginPage() {
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Signing in...
+                {dict.auth.signingInBtn}
               </>
             ) : (
               <>
                 <Lock className="h-4 w-4" />
-                Sign in
+                {dict.auth.signInBtn}
               </>
             )}
           </Button>
-          <p className="text-xs text-slate-500 text-center">
-            Registration is invitation-only. Have an invitation link?{" "}
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+            {dict.auth.inviteOnlyHint}{" "}
             <Link
               href="/register"
-              className="font-medium text-blue-700 hover:underline"
+              className="font-medium text-blue-700 dark:text-blue-400 hover:underline"
             >
-              Use invitation
+              {dict.auth.useInvitation}
             </Link>
           </p>
         </CardFooter>

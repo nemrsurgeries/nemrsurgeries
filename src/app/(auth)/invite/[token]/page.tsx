@@ -24,14 +24,14 @@ export default async function InviteTokenPage({
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2 text-red-700">
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
             <AlertCircle className="h-5 w-5" />
             <CardTitle>Invitation unavailable</CardTitle>
           </div>
           <CardDescription>{result.message}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             Please contact the colleague who invited you to send a fresh
             invitation link.
           </p>

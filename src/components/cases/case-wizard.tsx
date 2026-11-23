@@ -20,7 +20,13 @@ import {
   type ImplantInput,
 } from "@/modules/cases/schemas";
 import { createCaseAction, updateCaseAction } from "@/modules/cases/actions";
-import { IMPLANT_TYPE_LABELS } from "@/modules/cases/labels";
+import {
+  getCaseStatusLabel,
+  getImplantTypeLabel,
+  getPatientSexLabel,
+  getSurgicalRoleLabel,
+} from "@/modules/cases/labels";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,14 +40,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-const STEPS = [
-  { id: 1, title: "General Info", subtitle: "Date & anonymized demographics" },
-  { id: 2, title: "Diagnosis", subtitle: "Procedure & classification" },
-  { id: 3, title: "Team & Implants", subtitle: "Surgeons & hardware" },
-  { id: 4, title: "Documentation", subtitle: "Op notes, plan & learning" },
-  { id: 5, title: "Review & Save", subtitle: "Status & completion" },
-] as const;
 
 const EMPTY_FORM: CaseFormInput = {
   operationDate: "",
@@ -89,6 +87,15 @@ export function CaseWizard({
   canArchive = true,
 }: CaseWizardProps) {
   const router = useRouter();
+  const { locale, dict } = useLocale();
+  const isAr = locale === "ar";
+  const steps = [
+    { id: 1, title: dict.wizard.step1Title, subtitle: dict.wizard.step1Sub },
+    { id: 2, title: dict.wizard.step2Title, subtitle: dict.wizard.step2Sub },
+    { id: 3, title: dict.wizard.step3Title, subtitle: dict.wizard.step3Sub },
+    { id: 4, title: dict.wizard.step4Title, subtitle: dict.wizard.step4Sub },
+    { id: 5, title: dict.wizard.step5Title, subtitle: dict.wizard.step5Sub },
+  ];
   const storageKey =
     mode === "edit" && caseId
       ? `orthocase:wizard:edit:${caseId}`
@@ -270,7 +277,7 @@ export function CaseWizard({
       {/* Stepper */}
       <nav aria-label="Case creation steps">
         <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {STEPS.map((s) => {
+          {steps.map((s) => {
             const active = s.id === step;
             const completed = s.id < step;
             return (
@@ -280,10 +287,10 @@ export function CaseWizard({
                   onClick={() => setStep(s.id)}
                   className={`w-full rounded-lg border p-3 text-start transition-colors cursor-pointer ${
                     active
-                      ? "border-blue-600 bg-blue-50/70"
+                      ? "border-blue-600 bg-blue-50/70 dark:bg-blue-950/40"
                       : completed
-                        ? "border-slate-200 bg-white hover:border-blue-300"
-                        : "border-slate-200 bg-white/70 hover:bg-white"
+                        ? "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-700"
+                        : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -293,20 +300,20 @@ export function CaseWizard({
                           ? "bg-blue-700 text-white"
                           : completed
                             ? "bg-emerald-600 text-white"
-                            : "bg-slate-200 text-slate-600"
+                            : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                       }`}
                     >
                       {completed ? <Check className="h-3 w-3" /> : s.id}
                     </span>
                     <span
                       className={`text-xs font-semibold truncate ${
-                        active ? "text-blue-900" : "text-slate-800"
+                        active ? "text-blue-900 dark:text-blue-200" : "text-slate-800 dark:text-slate-200"
                       }`}
                     >
                       {s.title}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500 truncate">
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                     {s.subtitle}
                   </p>
                 </button>
@@ -317,15 +324,19 @@ export function CaseWizard({
       </nav>
 
       {/* Autosave & Draft Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
           {restoredDraft && (
-            <span className="rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-800">
-              Restored unsaved local draft
+            <span className="rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 px-2 py-0.5 text-amber-800 dark:text-amber-200">
+              {dict.wizard.draftRestored}
             </span>
           )}
           {lastAutosaved && (
-            <span>Autosaved locally at {lastAutosaved}</span>
+            <span>
+              {isAr
+                ? `تم الحفظ التلقائي محلياً الساعة ${lastAutosaved}`
+                : `Autosaved locally at ${lastAutosaved}`}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -338,7 +349,7 @@ export function CaseWizard({
               className="h-7 text-xs"
             >
               <RotateCcw className="h-3 w-3" />
-              Reset draft
+              {dict.wizard.discardDraft}
             </Button>
           )}
           <Button
@@ -356,7 +367,11 @@ export function CaseWizard({
             ) : (
               <Save className="h-3 w-3" />
             )}
-            {mode === "edit" ? "Save Changes" : "Save & Continue Later"}
+            {mode === "edit"
+              ? dict.common.save
+              : isAr
+                ? "حفظ والمتابعة لاحقاً"
+                : "Save & Continue Later"}
           </Button>
         </div>
       </div>
@@ -365,36 +380,33 @@ export function CaseWizard({
       {step === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 1 — General Information</CardTitle>
-            <CardDescription>
-              Basic case timing and anonymized patient demographics.
-            </CardDescription>
+            <CardTitle>
+              {isAr ? "الخطوة 1 — البيانات العامة" : "Step 1 — General Information"}
+            </CardTitle>
+            <CardDescription>{dict.wizard.step1Sub}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-start gap-2.5 rounded-md border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900">
-              <ShieldAlert className="h-4 w-4 shrink-0 text-blue-700 mt-0.5" />
+            <div className="flex items-start gap-2.5 rounded-md border border-blue-200 dark:border-blue-800/70 bg-blue-50/70 dark:bg-blue-950/40 p-3 text-xs text-blue-900 dark:text-blue-200">
+              <ShieldAlert className="h-4 w-4 shrink-0 text-blue-700 dark:text-blue-400 mt-0.5" />
               <p>
-                <strong>De-identification policy:</strong> Do not enter patient
-                names, national IDs, phone numbers, or other personally
-                identifying information. A unique Case ID is generated
-                automatically for your library.
+                <strong>{dict.wizard.deidPolicyTitle}</strong>{" "}
+                {dict.wizard.deidPolicyBody}
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Case ID</Label>
+                <Label htmlFor="caseNumber">{dict.wizard.caseId}</Label>
                 <Input
-                  value={
-                    caseNumber ??
-                    "Auto-generated on save (e.g. ORTHO-2026-0001)"
-                  }
+                  id="caseNumber"
+                  name="caseNumber"
+                  value={caseNumber ?? dict.wizard.autoGeneratedPlaceholder}
                   disabled
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="operationDate">Operation date</Label>
+                <Label htmlFor="operationDate">{dict.wizard.operationDate}</Label>
                 <Input
                   id="operationDate"
                   type="date"
@@ -404,20 +416,20 @@ export function CaseWizard({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="patientAge">Patient age (years)</Label>
+                <Label htmlFor="patientAge">{dict.wizard.patientAge}</Label>
                 <Input
                   id="patientAge"
                   type="number"
                   min={0}
                   max={120}
-                  placeholder="e.g. 42"
+                  placeholder={isAr ? "مثال: 42" : "e.g. 42"}
                   value={form.patientAge ?? ""}
                   onChange={(e) => updateField("patientAge", e.target.value)}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="patientSex">Patient sex</Label>
+                <Label htmlFor="patientSex">{dict.wizard.patientSex}</Label>
                 <NativeSelect
                   id="patientSex"
                   value={form.patientSex ?? "UNSPECIFIED"}
@@ -428,10 +440,16 @@ export function CaseWizard({
                     )
                   }
                 >
-                  <option value="UNSPECIFIED">Unspecified</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
+                  <option value="UNSPECIFIED">
+                    {getPatientSexLabel("UNSPECIFIED", locale)}
+                  </option>
+                  <option value="MALE">{getPatientSexLabel("MALE", locale)}</option>
+                  <option value="FEMALE">
+                    {getPatientSexLabel("FEMALE", locale)}
+                  </option>
+                  <option value="OTHER">
+                    {getPatientSexLabel("OTHER", locale)}
+                  </option>
                 </NativeSelect>
               </div>
             </div>
@@ -443,15 +461,16 @@ export function CaseWizard({
       {step === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 2 — Diagnosis &amp; Procedure</CardTitle>
-            <CardDescription>
-              Document the orthopedic diagnosis, surgical procedure, and
-              fracture classification.
-            </CardDescription>
+            <CardTitle>
+              {isAr
+                ? "الخطوة 2 — التشخيص والإجراء الجراحي"
+                : "Step 2 — Diagnosis & Procedure"}
+            </CardTitle>
+            <CardDescription>{dict.wizard.step2Sub}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="diagnosis">Diagnosis</Label>
+              <Label htmlFor="diagnosis">{dict.wizard.diagnosis}</Label>
               <Input
                 id="diagnosis"
                 placeholder="e.g. Closed right distal femur intra-articular fracture"
@@ -461,7 +480,7 @@ export function CaseWizard({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="procedure">Procedure</Label>
+              <Label htmlFor="procedure">{dict.wizard.procedure}</Label>
               <Input
                 id="procedure"
                 placeholder="e.g. ORIF with lateral distal femoral locking plate"
@@ -473,7 +492,7 @@ export function CaseWizard({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="classificationSystem">
-                  Classification system
+                  {dict.wizard.classificationSystem}
                 </Label>
                 <NativeSelect
                   id="classificationSystem"
@@ -491,19 +510,23 @@ export function CaseWizard({
                     }
                   }}
                 >
-                  <option value="">Select classification system</option>
+                  <option value="">
+                    {isAr ? "اختر نظام التصنيف" : "Select classification system"}
+                  </option>
                   {CLASSIFICATION_SYSTEM_PRESETS.map((sys) => (
                     <option key={sys} value={sys}>
                       {sys}
                     </option>
                   ))}
-                  <option value="Custom">Custom classification...</option>
+                  <option value="Custom">
+                    {isAr ? "تصنيف مخصص..." : "Custom classification..."}
+                  </option>
                 </NativeSelect>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="fractureClassification">
-                  Fracture classification
+                  {dict.wizard.fractureClassification}
                 </Label>
                 <Input
                   id="fractureClassification"
@@ -518,10 +541,16 @@ export function CaseWizard({
 
             {(!isPresetSystem || form.classificationSystem === "Custom") && (
               <div className="space-y-1.5">
-                <Label htmlFor="customSystem">Custom system name</Label>
+                <Label htmlFor="customSystem">
+                  {isAr ? "اسم نظام التصنيف المخصص" : "Custom system name"}
+                </Label>
                 <Input
                   id="customSystem"
-                  placeholder="Enter custom classification system"
+                  placeholder={
+                    isAr
+                      ? "أدخل اسم نظام التصنيف"
+                      : "Enter custom classification system"
+                  }
                   value={
                     customSystem ||
                     (form.classificationSystem === "Custom"
@@ -541,15 +570,14 @@ export function CaseWizard({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Step 3 — Surgical Team</CardTitle>
-              <CardDescription>
-                Record your surgical role, responsible surgeon, senior
-                supervisor, and hospital.
-              </CardDescription>
+              <CardTitle>
+                {isAr ? "الخطوة 3 — الفريق الجراحي" : "Step 3 — Surgical Team"}
+              </CardTitle>
+              <CardDescription>{dict.wizard.step3Sub}</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="surgeon">Responsible surgeon</Label>
+                <Label htmlFor="surgeon">{dict.wizard.responsibleSurgeon}</Label>
                 <Input
                   id="surgeon"
                   placeholder="Dr. ..."
@@ -559,7 +587,7 @@ export function CaseWizard({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="myRole">My role</Label>
+                <Label htmlFor="myRole">{dict.wizard.mySurgicalRole}</Label>
                 <NativeSelect
                   id="myRole"
                   value={form.myRole ?? ""}
@@ -570,25 +598,37 @@ export function CaseWizard({
                     )
                   }
                 >
-                  <option value="">Select role</option>
-                  <option value="OPERATOR">Operator</option>
-                  <option value="FIRST_ASSISTANT">First Assistant</option>
-                  <option value="ASSISTANT">Assistant</option>
+                  <option value="">
+                    {isAr ? "اختر الدور الجراحي" : "Select role"}
+                  </option>
+                  <option value="OPERATOR">
+                    {getSurgicalRoleLabel("OPERATOR", locale)}
+                  </option>
+                  <option value="FIRST_ASSISTANT">
+                    {getSurgicalRoleLabel("FIRST_ASSISTANT", locale)}
+                  </option>
+                  <option value="ASSISTANT">
+                    {getSurgicalRoleLabel("ASSISTANT", locale)}
+                  </option>
                 </NativeSelect>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="seniorSurgeon">Senior surgeon</Label>
+                <Label htmlFor="seniorSurgeon">{dict.wizard.seniorSurgeon}</Label>
                 <Input
                   id="seniorSurgeon"
-                  placeholder="Optional supervising consultant"
+                  placeholder={
+                    isAr
+                      ? "الاستشاري المشرف (اختياري)"
+                      : "Optional supervising consultant"
+                  }
                   value={form.seniorSurgeon ?? ""}
                   onChange={(e) => updateField("seniorSurgeon", e.target.value)}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="hospital">Hospital / Institution</Label>
+                <Label htmlFor="hospital">{dict.wizard.hospital}</Label>
                 <Input
                   id="hospital"
                   placeholder="e.g. Cairo Orthopedic Teaching Hospital"
@@ -600,12 +640,13 @@ export function CaseWizard({
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 space-y-0">
               <div>
-                <CardTitle>Instruments &amp; Implants</CardTitle>
+                <CardTitle>{dict.wizard.implantsTitle}</CardTitle>
                 <CardDescription>
-                  Add plates, screws, intramedullary nails, or fixation systems
-                  used in this procedure.
+                  {isAr
+                    ? "أضف الشرائح أو المسامير أو المسامير النخاعية المستخدمة في العملية."
+                    : "Add plates, screws, intramedullary nails, or fixation systems used in this procedure."}
                 </CardDescription>
               </div>
               <Button
@@ -615,40 +656,42 @@ export function CaseWizard({
                 onClick={addImplant}
               >
                 <Plus className="h-4 w-4" />
-                Add Implant
+                {dict.wizard.addImplant}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {(form.implants ?? []).length === 0 ? (
-                <p className="text-sm text-slate-500 py-4 text-center border border-dashed border-slate-200 rounded-md">
-                  No implants recorded yet. Click &ldquo;Add Implant&rdquo; to
-                  document hardware.
+                <p className="text-sm text-slate-500 dark:text-slate-400 py-4 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-md">
+                  {dict.wizard.noImplants}
                 </p>
               ) : (
                 (form.implants ?? []).map((imp, idx) => (
                   <div
                     key={idx}
-                    className="rounded-md border border-slate-200 bg-slate-50/50 p-4 space-y-3"
+                    className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 p-4 space-y-3"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-700">
-                        Implant #{idx + 1} — {IMPLANT_TYPE_LABELS[imp.implantType]}
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Implant #{idx + 1} —{" "}
+                        {getImplantTypeLabel(imp.implantType, locale)}
                       </span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeImplant(idx)}
-                        className="h-7 text-red-600 hover:text-red-700"
+                        className="h-7 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        Remove
+                        {dict.common.delete}
                       </Button>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div className="space-y-1">
-                        <Label className="text-xs">Type</Label>
+                        <Label className="text-xs">
+                          {isAr ? "النوع" : "Type"}
+                        </Label>
                         <NativeSelect
                           value={imp.implantType}
                           onChange={(e) =>
@@ -658,15 +701,25 @@ export function CaseWizard({
                             })
                           }
                         >
-                          <option value="PLATE">Plate</option>
-                          <option value="SCREW">Screw</option>
-                          <option value="NAIL">Intramedullary Nail</option>
-                          <option value="OTHER">Other</option>
+                          <option value="PLATE">
+                            {getImplantTypeLabel("PLATE", locale)}
+                          </option>
+                          <option value="SCREW">
+                            {getImplantTypeLabel("SCREW", locale)}
+                          </option>
+                          <option value="NAIL">
+                            {getImplantTypeLabel("NAIL", locale)}
+                          </option>
+                          <option value="OTHER">
+                            {getImplantTypeLabel("OTHER", locale)}
+                          </option>
                         </NativeSelect>
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">Manufacturer</Label>
+                        <Label className="text-xs">
+                          {isAr ? "الشركة المصنّعة" : "Manufacturer"}
+                        </Label>
                         <Input
                           placeholder="e.g. DePuy Synthes"
                           value={imp.manufacturer ?? ""}
@@ -677,7 +730,9 @@ export function CaseWizard({
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">Model</Label>
+                        <Label className="text-xs">
+                          {isAr ? "الموديل" : "Model"}
+                        </Label>
                         <Input
                           placeholder="e.g. VA-LCP Distal Femur"
                           value={imp.model ?? ""}
@@ -688,7 +743,9 @@ export function CaseWizard({
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">Specifications</Label>
+                        <Label className="text-xs">
+                          {isAr ? "المواصفات" : "Specifications"}
+                        </Label>
                         <Input
                           placeholder="e.g. 9-hole, 4.5mm titanium"
                           value={imp.specifications ?? ""}
@@ -702,9 +759,15 @@ export function CaseWizard({
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs">Notes</Label>
+                      <Label className="text-xs">
+                        {isAr ? "ملاحظات" : "Notes"}
+                      </Label>
                       <Input
-                        placeholder="Optional fixation remarks"
+                        placeholder={
+                          isAr
+                            ? "ملاحظات إضافية حول التثبيت (اختياري)"
+                            : "Optional fixation remarks"
+                        }
                         value={imp.notes ?? ""}
                         onChange={(e) =>
                           updateImplant(idx, { notes: e.target.value })
@@ -724,10 +787,15 @@ export function CaseWizard({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Step 4 — Intraoperative Notes</CardTitle>
+              <CardTitle>
+                {isAr
+                  ? `الخطوة 4 — ${dict.wizard.intraopNotes}`
+                  : "Step 4 — Intraoperative Notes"}
+              </CardTitle>
               <CardDescription>
-                Document surgical approach, operative steps, observations, and
-                complications.
+                {isAr
+                  ? "وثّق المدخل الجراحي وخطوات العملية والملاحظات وأي مضاعفات."
+                  : "Document surgical approach, operative steps, observations, and complications."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -740,17 +808,18 @@ export function CaseWizard({
 
           <Card>
             <CardHeader>
-              <CardTitle>Postoperative Plan</CardTitle>
+              <CardTitle>{dict.wizard.postopPlan}</CardTitle>
               <CardDescription>
-                Record your documented postoperative instructions and next
-                scheduled follow-up.
+                {isAr
+                  ? "سجّل تعليمات ما بعد العملية وموعد المتابعة القادم."
+                  : "Record your documented postoperative instructions and next scheduled follow-up."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="weightBearing">
-                    Weight-bearing instructions
+                    {dict.wizard.weightBearing}
                   </Label>
                   <Input
                     id="weightBearing"
@@ -764,7 +833,7 @@ export function CaseWizard({
 
                 <div className="space-y-1.5">
                   <Label htmlFor="nextFollowupDate">
-                    Next scheduled follow-up date
+                    {dict.wizard.nextFollowupDate}
                   </Label>
                   <Input
                     id="nextFollowupDate"
@@ -779,7 +848,9 @@ export function CaseWizard({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="rehabilitationPlan">Rehabilitation plan</Label>
+                  <Label htmlFor="rehabilitationPlan">
+                    {dict.wizard.rehabPlan}
+                  </Label>
                   <Textarea
                     id="rehabilitationPlan"
                     placeholder="ROM exercises, physiotherapy milestones..."
@@ -791,7 +862,9 @@ export function CaseWizard({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="medicationNotes">Medication notes</Label>
+                  <Label htmlFor="medicationNotes">
+                    {dict.wizard.medications}
+                  </Label>
                   <Textarea
                     id="medicationNotes"
                     placeholder="Documented postoperative regimen notes..."
@@ -806,7 +879,7 @@ export function CaseWizard({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="followupInstructions">
-                    Follow-up instructions
+                    {dict.wizard.followupInstructions}
                   </Label>
                   <Textarea
                     id="followupInstructions"
@@ -819,10 +892,16 @@ export function CaseWizard({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="postopAdditional">Additional notes</Label>
+                  <Label htmlFor="postopAdditional">
+                    {dict.wizard.additionalNotes}
+                  </Label>
                   <Textarea
                     id="postopAdditional"
-                    placeholder="Other postoperative remarks..."
+                    placeholder={
+                      isAr
+                        ? "ملاحظات إضافية بعد العملية..."
+                        : "Other postoperative remarks..."
+                    }
                     value={form.postoperativePlan?.additionalNotes ?? ""}
                     onChange={(e) =>
                       updatePostop("additionalNotes", e.target.value)
@@ -835,16 +914,21 @@ export function CaseWizard({
 
           <Card>
             <CardHeader>
-              <CardTitle>Learning Points</CardTitle>
+              <CardTitle>{dict.wizard.learningPoints}</CardTitle>
               <CardDescription>
-                Capture technical takeaways, pitfalls avoided, and personal
-                educational notes.
+                {isAr
+                  ? "دوّن الدروس الفنية المستفادة والملاحظات التعليمية الشخصية."
+                  : "Capture technical takeaways, pitfalls avoided, and personal educational notes."}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
                 rows={4}
-                placeholder="Key technical observations, reduction pearls, or areas for future improvement..."
+                placeholder={
+                  isAr
+                    ? "ملاحظات فنية رئيسية، نصائح الرد والتثبيت، أو نقاط للتحسين مستقبلاً..."
+                    : "Key technical observations, reduction pearls, or areas for future improvement..."
+                }
                 value={form.learningPoints ?? ""}
                 onChange={(e) => updateField("learningPoints", e.target.value)}
               />
@@ -857,62 +941,78 @@ export function CaseWizard({
       {step === 5 && (
         <Card>
           <CardHeader>
-            <CardTitle>Step 5 — Review &amp; Save</CardTitle>
+            <CardTitle>
+              {isAr ? "الخطوة 5 — المراجعة والحفظ" : "Step 5 — Review & Save"}
+            </CardTitle>
             <CardDescription>
-              Review your surgical case summary and choose its status. X-rays,
-              photographs, lab reports, and follow-up entries can be managed
-              directly from the Case Details page after saving.
+              {isAr
+                ? "راجع ملخص الحالة واختر حالتها. يمكنك إدارة صور الأشعة والتحاليل والمتابعات مباشرة من صفحة تفاصيل الحالة بعد الحفظ."
+                : "Review your surgical case summary and choose its status. X-rays, photographs, lab reports, and follow-up entries can be managed directly from the Case Details page after saving."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-4 text-sm sm:grid-cols-2">
               <div>
-                <p className="text-xs text-slate-500">Operation Date</p>
-                <p className="font-medium text-slate-900">
-                  {form.operationDate || "Not specified"}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.wizard.operationDate}
+                </p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.operationDate || (isAr ? "غير محدد" : "Not specified")}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Patient Demographics</p>
-                <p className="font-medium text-slate-900">
-                  {form.patientAge ? `${form.patientAge} yrs` : "Age —"} &middot;{" "}
-                  {form.patientSex}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.detail.generalDemographics}
+                </p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.patientAge
+                    ? `${form.patientAge} ${dict.detail.years}`
+                    : dict.common.none}{" "}
+                  &middot;{" "}
+                  {getPatientSexLabel(form.patientSex ?? "UNSPECIFIED", locale)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Diagnosis</p>
-                <p className="font-medium text-slate-900">
-                  {form.diagnosis || "Not specified"}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.wizard.diagnosis}
+                </p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.diagnosis || (isAr ? "غير محدد" : "Not specified")}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Procedure</p>
-                <p className="font-medium text-slate-900">
-                  {form.procedure || "Not specified"}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.wizard.procedure}
+                </p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.procedure || (isAr ? "غير محدد" : "Not specified")}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Classification</p>
-                <p className="font-medium text-slate-900">
-                  {form.fractureClassification || "Not specified"}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.wizard.fractureClassification}
+                </p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.fractureClassification ||
+                    (isAr ? "غير محدد" : "Not specified")}
                   {form.classificationSystem
                     ? ` (${form.classificationSystem})`
                     : ""}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">
-                  Surgical Team &amp; Hardware
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {dict.wizard.step3Title}
                 </p>
-                <p className="font-medium text-slate-900">
-                  {form.surgeon || "Surgeon —"} &middot;{" "}
-                  {(form.implants ?? []).length} implant(s)
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {form.surgeon || dict.common.none} &middot;{" "}
+                  {(form.implants ?? []).length} {dict.cases.implantsCount}
                 </p>
               </div>
             </div>
 
             <div className="max-w-xs space-y-1.5">
-              <Label htmlFor="caseStatus">Case status</Label>
+              <Label htmlFor="caseStatus">{dict.wizard.caseStatus}</Label>
               <NativeSelect
                 id="caseStatus"
                 value={form.status ?? "DRAFT"}
@@ -923,11 +1023,21 @@ export function CaseWizard({
                   )
                 }
               >
-                <option value="DRAFT">Draft</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="AWAITING_FOLLOWUP">Awaiting Follow-up</option>
-                <option value="COMPLETED">Completed</option>
-                {canArchive && <option value="ARCHIVED">Archived</option>}
+                <option value="DRAFT">{getCaseStatusLabel("DRAFT", locale)}</option>
+                <option value="IN_PROGRESS">
+                  {getCaseStatusLabel("IN_PROGRESS", locale)}
+                </option>
+                <option value="AWAITING_FOLLOWUP">
+                  {getCaseStatusLabel("AWAITING_FOLLOWUP", locale)}
+                </option>
+                <option value="COMPLETED">
+                  {getCaseStatusLabel("COMPLETED", locale)}
+                </option>
+                {canArchive && (
+                  <option value="ARCHIVED">
+                    {getCaseStatusLabel("ARCHIVED", locale)}
+                  </option>
+                )}
               </NativeSelect>
             </div>
           </CardContent>
@@ -935,15 +1045,15 @@ export function CaseWizard({
       )}
 
       {/* Footer Navigation */}
-      <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+      <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4">
         <Button
           type="button"
           variant="outline"
           disabled={step === 1}
           onClick={() => setStep((s) => Math.max(1, s - 1))}
         >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
+          <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+          {dict.common.previous}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -952,8 +1062,8 @@ export function CaseWizard({
               type="button"
               onClick={() => setStep((s) => Math.min(5, s + 1))}
             >
-              Next Step
-              <ChevronRight className="h-4 w-4" />
+              {dict.common.next}
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
           ) : (
             <Button
@@ -966,7 +1076,7 @@ export function CaseWizard({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {mode === "edit" ? "Save Case Changes" : "Create Surgical Case"}
+              {mode === "edit" ? dict.wizard.updateCase : dict.wizard.saveCase}
             </Button>
           )}
         </div>

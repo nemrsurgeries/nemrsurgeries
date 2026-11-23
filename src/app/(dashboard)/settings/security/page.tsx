@@ -1,9 +1,13 @@
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
+import { getServerI18n } from "@/lib/i18n/server";
 import { SecuritySettings } from "@/components/users/security-settings";
 
 export default async function SecuritySettingsPage() {
-  const { user, sessionId } = await requireSession();
+  const [{ user, sessionId }, { dict }] = await Promise.all([
+    requireSession(),
+    getServerI18n(),
+  ]);
 
   const rawSessions = await db.session.findMany({
     where: {
@@ -28,12 +32,11 @@ export default async function SecuritySettingsPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-          Security &amp; Sessions
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          {dict.pages.securityPageTitle}
         </h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Protect your surgical library with strong credentials and session
-          controls.
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          {dict.pages.securityPageDesc}
         </p>
       </div>
       <SecuritySettings userEmail={user.email} sessions={sessions} />

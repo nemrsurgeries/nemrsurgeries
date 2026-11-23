@@ -11,6 +11,7 @@ import {
   revokeSessionByIdAction,
 } from "@/modules/users/actions";
 import { formatDate } from "@/lib/utils";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,8 @@ export function SecuritySettings({
   sessions: SessionItem[];
 }) {
   const router = useRouter();
+  const { locale } = useLocale();
+  const isAr = locale === "ar";
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
@@ -128,29 +131,39 @@ export function SecuritySettings({
       {/* Password Change */}
       <Card>
         <CardHeader>
-          <CardTitle>Change Password</CardTitle>
+          <CardTitle>{isAr ? "تغيير كلمة المرور" : "Change Password"}</CardTitle>
           <CardDescription>
-            Updating your password automatically signs out all other devices.
+            {isAr
+              ? "يؤدي تحديث كلمة المرور تلقائياً إلى تسجيل الخروج من جميع الأجهزة الأخرى."
+              : "Updating your password automatically signs out all other devices."}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleChangePassword}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="current-password">Current password</Label>
+                <Label htmlFor="current-password">
+                  {isAr ? "كلمة المرور الحالية" : "Current password"}
+                </Label>
                 <Input
                   id="current-password"
+                  name="currentPassword"
                   type="password"
+                  autoComplete="current-password"
                   required
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="new-password">New password</Label>
+                <Label htmlFor="new-password">
+                  {isAr ? "كلمة المرور الجديدة" : "New password"}
+                </Label>
                 <Input
                   id="new-password"
+                  name="newPassword"
                   type="password"
+                  autoComplete="new-password"
                   required
                   minLength={10}
                   value={newPassword}
@@ -166,7 +179,7 @@ export function SecuritySettings({
               ) : (
                 <KeyRound className="h-4 w-4" />
               )}
-              Update Password
+              {isAr ? "تحديث كلمة المرور" : "Update Password"}
             </Button>
           </CardFooter>
         </form>
@@ -174,11 +187,13 @@ export function SecuritySettings({
 
       {/* Active Sessions */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 space-y-0">
           <div>
-            <CardTitle>Active Sessions</CardTitle>
+            <CardTitle>{isAr ? "الجلسات النشطة" : "Active Sessions"}</CardTitle>
             <CardDescription>
-              Devices currently signed into your account.
+              {isAr
+                ? "الأجهزة المسجل بها حالياً على حسابك."
+                : "Devices currently signed into your account."}
             </CardDescription>
           </div>
           {sessions.length > 1 && (
@@ -188,13 +203,13 @@ export function SecuritySettings({
               onClick={handleRevokeOthers}
               disabled={revokingAll}
             >
-              <LogOut className="h-4 w-4" />
-              Sign out other devices
+              <LogOut className="h-4 w-4 rtl:rotate-180" />
+              {isAr ? "تسجيل الخروج من الأجهزة الأخرى" : "Sign out other devices"}
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          <div className="divide-y divide-slate-200 rounded-md border border-slate-200">
+          <div className="divide-y divide-slate-200 dark:divide-slate-800 rounded-md border border-slate-200 dark:border-slate-800">
             {sessions.map((s) => (
               <div
                 key={s.id}
@@ -202,15 +217,26 @@ export function SecuritySettings({
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                    <p
+                      dir="ltr"
+                      className="truncate text-sm font-medium text-slate-900 dark:text-slate-100"
+                    >
                       {s.userAgent
                         ? s.userAgent.slice(0, 72)
-                        : "Browser session"}
+                        : isAr
+                          ? "جلسة متصفح"
+                          : "Browser session"}
                     </p>
-                    {s.isCurrent && <Badge variant="success">Current</Badge>}
+                    {s.isCurrent && (
+                      <Badge variant="success">
+                        {isAr ? "الحالية" : "Current"}
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {`IP: ${s.ipAddress ?? "Unknown"} · Started ${formatDate(s.createdAt)} · Expires ${formatDate(s.expiresAt)}`}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {isAr
+                      ? `IP: ${s.ipAddress ?? "غير معروف"} · بدأت ${formatDate(s.createdAt, undefined, locale)} · تنتهي ${formatDate(s.expiresAt, undefined, locale)}`
+                      : `IP: ${s.ipAddress ?? "Unknown"} · Started ${formatDate(s.createdAt, undefined, locale)} · Expires ${formatDate(s.expiresAt, undefined, locale)}`}
                   </p>
                 </div>
                 {!s.isCurrent && (
@@ -218,9 +244,9 @@ export function SecuritySettings({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRevokeSingle(s.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400"
                   >
-                    Revoke
+                    {isAr ? "إنهاء الجلسة" : "Revoke"}
                   </Button>
                 )}
               </div>
@@ -230,15 +256,18 @@ export function SecuritySettings({
       </Card>
 
       {/* Danger Zone: Account Deletion */}
-      <Card className="border-red-200">
+      <Card className="border-red-200 dark:border-red-800/70">
         <CardHeader>
-          <div className="flex items-center gap-2 text-red-700">
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
             <AlertTriangle className="h-4 w-4" />
-            <CardTitle className="text-red-700">Delete Account</CardTitle>
+            <CardTitle className="text-red-700 dark:text-red-400">
+              {isAr ? "حذف الحساب" : "Delete Account"}
+            </CardTitle>
           </div>
           <CardDescription>
-            Permanently deletes your account, all personally owned surgical
-            cases, attachments, and active shares. This action cannot be undone.
+            {isAr
+              ? "يحذف حسابك نهائياً مع جميع حالاتك الجراحية والمرفقات والمشاركات النشطة. لا يمكن التراجع عن هذا الإجراء."
+              : "Permanently deletes your account, all personally owned surgical cases, attachments, and active shares. This action cannot be undone."}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleDeleteAccount}>
@@ -246,7 +275,9 @@ export function SecuritySettings({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="confirm-email">
-                  Confirm your email ({userEmail})
+                  {isAr
+                    ? `أكد بريدك الإلكتروني (${userEmail})`
+                    : `Confirm your email (${userEmail})`}
                 </Label>
                 <Input
                   id="confirm-email"
@@ -259,7 +290,7 @@ export function SecuritySettings({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="confirm-phrase">
-                  Type DELETE MY ACCOUNT
+                  {isAr ? "اكتب DELETE MY ACCOUNT" : "Type DELETE MY ACCOUNT"}
                 </Label>
                 <Input
                   id="confirm-phrase"
@@ -278,7 +309,7 @@ export function SecuritySettings({
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Permanently Delete Account
+              {isAr ? "حذف الحساب نهائياً" : "Permanently Delete Account"}
             </Button>
           </CardFooter>
         </form>

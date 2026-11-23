@@ -261,7 +261,7 @@ export function CaseDetailClient({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-1.5 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5">
+                <span className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/70 rounded px-2 py-0.5">
                   {data.caseNumber}
                 </span>
                 <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
@@ -276,14 +276,14 @@ export function CaseDetailClient({
                 )}
               </div>
 
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {data.diagnosis || "Untitled Surgical Case"}
               </h1>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
                 {data.procedure || "No procedure recorded"}
               </p>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500 dark:text-slate-400">
                 <span>Operation: {formatDate(data.operationDate)}</span>
                 <span>Owner: {data.owner.name}</span>
                 {data.hospital && <span>Hospital: {data.hospital}</span>}
@@ -359,7 +359,7 @@ export function CaseDetailClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeleteOpen(true)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
                   title="Delete case"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -372,14 +372,14 @@ export function CaseDetailClient({
 
       {/* 8 Navigation Tabs */}
       <Tabs.Root defaultValue="overview" className="space-y-4">
-        <Tabs.List className="flex flex-wrap gap-1 border-b border-slate-200 pb-2">
+        <Tabs.List className="flex flex-wrap gap-1 border-b border-slate-200 dark:border-slate-800 pb-2">
           {tabItems.map((tab) => {
             const Icon = tab.icon;
             return (
               <Tabs.Trigger
                 key={tab.value}
                 value={tab.value}
-                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 cursor-pointer"
               >
                 <Icon className="h-3.5 w-3.5" />
                 {tab.label}
@@ -398,37 +398,37 @@ export function CaseDetailClient({
                   De-identified patient and case metadata.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3 text-sm">
+              <CardContent className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <p className="text-xs text-slate-500">Case ID</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Case ID</p>
                   <p className="font-mono font-medium">{data.caseNumber}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Operation Date</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Operation Date</p>
                   <p className="font-medium">
                     {formatDate(data.operationDate)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Patient Age</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Patient Age</p>
                   <p className="font-medium">
                     {data.patientAge !== null ? `${data.patientAge} years` : "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Patient Sex</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Patient Sex</p>
                   <p className="font-medium">
                     {PATIENT_SEX_LABELS[data.patientSex]}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Next Follow-up</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Next Follow-up</p>
                   <p className="font-medium">
                     {formatDate(data.nextFollowupDate)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Last Updated</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Last Updated</p>
                   <p className="font-medium">{formatDate(data.updatedAt)}</p>
                 </div>
               </CardContent>
@@ -441,9 +441,9 @@ export function CaseDetailClient({
                   Classification and operative team roles.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3 text-sm">
-                <div className="col-span-2">
-                  <p className="text-xs text-slate-500">
+              <CardContent className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Fracture Classification
                   </p>
                   <p className="font-medium">
@@ -454,21 +454,21 @@ export function CaseDetailClient({
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Responsible Surgeon</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Responsible Surgeon</p>
                   <p className="font-medium">{data.surgeon || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">My Role</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">My Role</p>
                   <p className="font-medium">
                     {data.myRole ? SURGICAL_ROLE_LABELS[data.myRole] : "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Senior Surgeon</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Senior Surgeon</p>
                   <p className="font-medium">{data.seniorSurgeon || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Hospital</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Hospital</p>
                   <p className="font-medium">{data.hospital || "—"}</p>
                 </div>
               </CardContent>
@@ -489,13 +489,13 @@ export function CaseDetailClient({
             <CardContent>
               {data.intraoperativeNotes ? (
                 <div
-                  className="prose prose-sm max-w-none text-slate-800 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-900 [&_h3]:mt-4 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_p]:mb-2"
+                  className="prose prose-sm max-w-none text-slate-800 dark:text-slate-200 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-900 dark:[&_h3]:text-slate-100 [&_h3]:mt-4 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_p]:mb-2"
                   dangerouslySetInnerHTML={{
                     __html: data.intraoperativeNotes,
                   }}
                 />
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   No intraoperative notes recorded yet.
                 </p>
               )}
@@ -511,43 +511,43 @@ export function CaseDetailClient({
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
               <div>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Weight-Bearing Instructions
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                <p className="mt-1 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                   {data.postoperativePlan.weightBearing || "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Rehabilitation Plan
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                <p className="mt-1 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                   {data.postoperativePlan.rehabilitationPlan || "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Medication Notes
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                <p className="mt-1 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                   {data.postoperativePlan.medicationNotes || "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Follow-up Instructions
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                <p className="mt-1 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                   {data.postoperativePlan.followupInstructions || "—"}
                 </p>
               </div>
               {data.postoperativePlan.additionalNotes && (
                 <div className="sm:col-span-2">
-                  <p className="text-xs font-medium text-slate-500">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     Additional Notes
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap text-slate-800">
+                  <p className="mt-1 whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                     {data.postoperativePlan.additionalNotes}
                   </p>
                 </div>
@@ -574,14 +574,14 @@ export function CaseDetailClient({
             </CardHeader>
             <CardContent>
               {data.implants.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-500">
+                <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
                   No implants recorded for this case.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-xs font-medium uppercase tracking-wider text-slate-500">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         <th className="py-2 pe-4 text-start">Type</th>
                         <th className="py-2 pe-4 text-start">Manufacturer</th>
                         <th className="py-2 pe-4 text-start">Model</th>
@@ -589,22 +589,22 @@ export function CaseDetailClient({
                         <th className="py-2 text-start">Notes</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {data.implants.map((imp) => (
                         <tr key={imp.id}>
                           <td className="py-2.5 pe-4 font-medium">
                             {IMPLANT_TYPE_LABELS[imp.implantType]}
                           </td>
-                          <td className="py-2.5 pe-4 text-slate-700">
+                          <td className="py-2.5 pe-4 text-slate-700 dark:text-slate-300">
                             {imp.manufacturer || "—"}
                           </td>
-                          <td className="py-2.5 pe-4 text-slate-700">
+                          <td className="py-2.5 pe-4 text-slate-700 dark:text-slate-300">
                             {imp.model || "—"}
                           </td>
-                          <td className="py-2.5 pe-4 text-slate-700">
+                          <td className="py-2.5 pe-4 text-slate-700 dark:text-slate-300">
                             {imp.specifications || "—"}
                           </td>
-                          <td className="py-2.5 text-slate-600">
+                          <td className="py-2.5 text-slate-600 dark:text-slate-300">
                             {imp.notes || "—"}
                           </td>
                         </tr>
@@ -661,11 +661,11 @@ export function CaseDetailClient({
             </CardHeader>
             <CardContent>
               {data.learningPoints ? (
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200">
                   {data.learningPoints}
                 </p>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   No learning points recorded for this case yet.
                 </p>
               )}
@@ -684,25 +684,25 @@ export function CaseDetailClient({
             </CardHeader>
             <CardContent>
               {data.auditLogs.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-500">
+                <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
                   No activity recorded yet.
                 </p>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.auditLogs.map((log) => (
                     <div
                       key={log.id}
                       className="flex items-center justify-between py-2.5 text-sm"
                     >
                       <div>
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium text-slate-900 dark:text-slate-100">
                           {AUDIT_ACTION_LABELS[log.action]}
                         </span>
-                        <span className="text-xs text-slate-500 ms-2">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 ms-2">
                           by {log.user?.name ?? "System"}
                         </span>
                       </div>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-400 dark:text-slate-500">
                         {formatDate(log.createdAt, {
                           year: "numeric",
                           month: "short",

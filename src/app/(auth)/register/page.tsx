@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MailCheck } from "lucide-react";
+import { getServerI18n } from "@/lib/i18n/server";
 import {
   Card,
   CardContent,
@@ -16,7 +17,10 @@ export default async function RegisterPage({
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
-  const { token } = await searchParams;
+  const [{ token }, { dict }] = await Promise.all([
+    searchParams,
+    getServerI18n(),
+  ]);
 
   if (token && token.trim().length > 0) {
     redirect(`/invite/${encodeURIComponent(token.trim())}`);
@@ -25,27 +29,18 @@ export default async function RegisterPage({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2 text-blue-700">
+        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
           <MailCheck className="h-5 w-5" />
-          <CardTitle>Invitation required</CardTitle>
+          <CardTitle>{dict.auth.registerTitle}</CardTitle>
         </div>
-        <CardDescription>
-          OrthoCase is an invitation-only clinical case management platform.
-        </CardDescription>
+        <CardDescription>{dict.auth.registerDesc}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm text-slate-600">
-        <p>
-          To create your personal surgical case library, open the single-use
-          invitation link sent to your email by a registered colleague.
-        </p>
-        <p className="text-xs text-slate-500">
-          Joining via an invitation gives you an independent private account.
-          Other doctors&apos; cases remain private unless explicitly shared.
-        </p>
+      <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+        <p>{dict.auth.registerBody}</p>
       </CardContent>
       <CardFooter>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/login">Back to Sign In</Link>
+          <Link href="/login">{dict.auth.backToSignIn}</Link>
         </Button>
       </CardFooter>
     </Card>

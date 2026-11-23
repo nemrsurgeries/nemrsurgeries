@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { updateProfileAction } from "@/modules/users/actions";
 import type { AuthenticatedUser } from "@/modules/auth/session";
 import { formatDate } from "@/lib/utils";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/card";
 
 export function ProfileForm({ user }: { user: AuthenticatedUser }) {
+  const { locale, dict } = useLocale();
   const [name, setName] = useState(user.name);
   const [professionalTitle, setProfessionalTitle] = useState(
     user.professionalTitle ?? "",
@@ -36,10 +38,17 @@ export function ProfileForm({ user }: { user: AuthenticatedUser }) {
         hospital,
       });
       if (!res.success) {
-        toast.error(res.error ?? "Unable to update profile.");
+        toast.error(
+          res.error ??
+            (locale === "ar"
+              ? "تعذر تحديث الملف الشخصي."
+              : "Unable to update profile."),
+        );
         return;
       }
-      toast.success("Profile updated");
+      toast.success(
+        locale === "ar" ? "تم تحديث الملف الشخصي" : "Profile updated",
+      );
     } finally {
       setSaving(false);
     }
@@ -48,17 +57,16 @@ export function ProfileForm({ user }: { user: AuthenticatedUser }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Doctor Profile</CardTitle>
-        <CardDescription>
-          This information identifies you when you share surgical cases or send
-          invitations.
-        </CardDescription>
+        <CardTitle>{dict.pages.profileCardTitle}</CardTitle>
+        <CardDescription>{dict.pages.profileCardDesc}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="profile-name">Full name</Label>
+              <Label htmlFor="profile-name">
+                {locale === "ar" ? "الاسم الكامل" : "Full name"}
+              </Label>
               <Input
                 id="profile-name"
                 required
@@ -68,38 +76,51 @@ export function ProfileForm({ user }: { user: AuthenticatedUser }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="profile-email">Email address</Label>
+              <Label htmlFor="profile-email">{dict.auth.emailLabel}</Label>
               <Input id="profile-email" value={user.email} disabled />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="profile-title">Professional title</Label>
+              <Label htmlFor="profile-title">
+                {locale === "ar" ? "المسمى المهني" : "Professional title"}
+              </Label>
               <Input
                 id="profile-title"
-                placeholder="e.g. Consultant Orthopedic Surgeon"
+                placeholder={
+                  locale === "ar"
+                    ? "مثال: استشاري جراحة العظام"
+                    : "e.g. Consultant Orthopedic Surgeon"
+                }
                 value={professionalTitle}
                 onChange={(e) => setProfessionalTitle(e.target.value)}
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="profile-hospital">Hospital / Institution</Label>
+              <Label htmlFor="profile-hospital">{dict.wizard.hospital}</Label>
               <Input
                 id="profile-hospital"
-                placeholder="Optional"
+                placeholder={locale === "ar" ? "اختياري" : "Optional"}
                 value={hospital}
                 onChange={(e) => setHospital(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Account created on {formatDate(user.createdAt)} &middot; Email
-            status:{" "}
-            <span className="font-medium text-slate-900">
-              {user.emailVerified ? "Verified" : "Unverified"}
+          <div className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+            {locale === "ar" ? "تاريخ إنشاء الحساب" : "Account created on"}{" "}
+            {formatDate(user.createdAt, undefined, locale)} &middot;{" "}
+            {locale === "ar" ? "حالة البريد:" : "Email status:"}{" "}
+            <span className="font-medium text-slate-900 dark:text-slate-100">
+              {user.emailVerified
+                ? locale === "ar"
+                  ? "مُفعّل"
+                  : "Verified"
+                : locale === "ar"
+                  ? "غير مُفعّل"
+                  : "Unverified"}
             </span>
           </div>
         </CardContent>
@@ -108,12 +129,12 @@ export function ProfileForm({ user }: { user: AuthenticatedUser }) {
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Saving...
+                {dict.common.saving}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save Changes
+                {dict.common.save}
               </>
             )}
           </Button>

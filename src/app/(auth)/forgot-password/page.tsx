@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
 
       {submitted ? (
         <CardContent className="space-y-4">
-          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
+          <div className="rounded-md border border-emerald-200 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2.5 text-sm text-emerald-800 dark:text-emerald-200">
             If an account exists for <strong>{email}</strong>, a password reset
             link has been sent. Please check your inbox.
           </div>
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
             {error && (
               <div
                 role="alert"
-                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                className="rounded-md border border-red-200 dark:border-red-800/70 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-400"
               >
                 {error}
               </div>
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
             </Button>
             <Link
               href="/login"
-              className="text-xs font-medium text-slate-600 hover:text-slate-900"
+              className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
             >
               Back to Sign In
             </Link>
