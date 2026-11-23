@@ -17,21 +17,34 @@ export class S3StorageProvider implements StorageProvider {
   private bucket: string;
 
   constructor() {
-    const bucket = process.env.S3_BUCKET;
-    const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+    const bucket = process.env.S3_BUCKET || "medical-media";
+    const accessKeyId =
+      process.env.S3_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey =
+      process.env.S3_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+    const endpoint =
+      process.env.S3_ENDPOINT || process.env.AWS_ENDPOINT_URL_S3 || undefined;
+    const region =
+      process.env.S3_REGION || process.env.AWS_REGION || "us-east-2";
 
-    if (!bucket || !accessKeyId || !secretAccessKey) {
+    if (!accessKeyId || !secretAccessKey) {
       throw new Error(
-        "S3 storage driver requires S3_BUCKET, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY.",
+        "S3 storage driver requires S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY or Neon AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY.",
       );
     }
 
+    // Neon Object Storage requires path-style addressing
+    const isNeonEndpoint = Boolean(
+      process.env.AWS_ENDPOINT_URL_S3 && !process.env.S3_ENDPOINT,
+    );
+    const forcePathStyle =
+      process.env.S3_FORCE_PATH_STYLE === "true" || isNeonEndpoint;
+
     this.bucket = bucket;
     this.client = new S3Client({
-      region: process.env.S3_REGION ?? "auto",
-      endpoint: process.env.S3_ENDPOINT || undefined,
-      forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+      region,
+      endpoint,
+      forcePathStyle,
       credentials: {
         accessKeyId,
         secretAccessKey,
