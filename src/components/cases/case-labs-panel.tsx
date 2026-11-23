@@ -385,6 +385,8 @@ export function CaseLabsPanel({
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2"
+                          aria-label={`Edit ${lab.testName} result`}
+                          title="Edit result"
                           onClick={() => startEdit(lab)}
                         >
                           <Edit3 className="h-3.5 w-3.5" />
@@ -394,6 +396,8 @@ export function CaseLabsPanel({
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2 text-red-600 hover:text-red-700"
+                          aria-label={`Delete ${lab.testName} result`}
+                          title="Delete result"
                           onClick={() => setDeleteId(lab.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

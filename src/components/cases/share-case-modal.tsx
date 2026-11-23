@@ -78,6 +78,7 @@ export function ShareCaseModal({
 
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [results, setResults] = useState<DoctorSearchResult[]>([]);
   const [selectedDoctor, setSelectedDoctor] =
     useState<DoctorSearchResult | null>(null);
@@ -100,10 +101,12 @@ export function ShareCaseModal({
       return;
     }
     setSearching(true);
+    setHasSearched(false);
     setSelectedDoctor(null);
     try {
       const res = await searchDoctorsAction(query);
       setResults(res.doctors);
+      setHasSearched(true);
       if (res.doctors.length === 0) {
         if (query.includes("@")) {
           setInviteEmail(query.trim().toLowerCase());
@@ -132,6 +135,7 @@ export function ShareCaseModal({
       );
       setSelectedDoctor(null);
       setResults([]);
+      setHasSearched(false);
       setQuery("");
       router.refresh();
     } finally {
@@ -242,7 +246,10 @@ export function ShareCaseModal({
                     id="doctor-search"
                     placeholder="Search by doctor name or email..."
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      if (hasSearched) setHasSearched(false);
+                    }}
                     className="ps-8"
                   />
                 </div>
@@ -254,6 +261,16 @@ export function ShareCaseModal({
                   )}
                 </Button>
               </form>
+
+              {hasSearched && !searching && results.length === 0 && (
+                <p
+                  role="status"
+                  className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
+                >
+                  No matching registered doctors found. You can invite them by
+                  email below.
+                </p>
+              )}
 
               {results.length > 0 && (
                 <div className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-slate-50/50">

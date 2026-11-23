@@ -210,9 +210,7 @@ export function SecuritySettings({
                     {s.isCurrent && <Badge variant="success">Current</Badge>}
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    IP: {s.ipAddress ?? "Unknown"} &middot; Started{" "}
-                    {formatDate(s.createdAt)} &middot; Expires{" "}
-                    {formatDate(s.expiresAt)}
+                    {`IP: ${s.ipAddress ?? "Unknown"} · Started ${formatDate(s.createdAt)} · Expires ${formatDate(s.expiresAt)}`}
                   </p>
                 </div>
                 {!s.isCurrent && (

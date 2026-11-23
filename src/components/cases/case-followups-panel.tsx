@@ -298,6 +298,8 @@ export function CaseFollowupsPanel({
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2"
+                          aria-label="Edit follow-up entry"
+                          title="Edit follow-up"
                           onClick={() => startEdit(f)}
                         >
                           <Edit3 className="h-3.5 w-3.5" />
@@ -307,6 +309,8 @@ export function CaseFollowupsPanel({
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2 text-red-600 hover:text-red-700"
+                          aria-label="Delete follow-up entry"
+                          title="Delete follow-up"
                           onClick={() => setDeleteId(f.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

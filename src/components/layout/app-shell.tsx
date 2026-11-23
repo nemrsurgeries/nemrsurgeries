@@ -89,6 +89,8 @@ export function AppShell({
       <div className="flex h-14 items-center justify-between border-b border-slate-200 px-3">
         <Link
           href="/dashboard"
+          aria-label={collapsed ? "OrthoCase Dashboard" : undefined}
+          title={collapsed ? "OrthoCase Dashboard" : undefined}
           className="flex items-center gap-2.5 overflow-hidden"
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-700 text-white">
@@ -131,7 +133,12 @@ export function AppShell({
 
       <div className="p-3">
         <Button asChild className={cn("w-full", collapsed && "px-0")}>
-          <Link href="/cases/new" onClick={() => setMobileOpen(false)}>
+          <Link
+            href="/cases/new"
+            onClick={() => setMobileOpen(false)}
+            aria-label={collapsed ? "New Surgical Case" : undefined}
+            title={collapsed ? "New Surgical Case" : undefined}
+          >
             <Plus className="h-4 w-4" />
             {!collapsed && <span>New Surgical Case</span>}
           </Link>
@@ -154,6 +161,7 @@ export function AppShell({
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
                   active
@@ -189,6 +197,7 @@ export function AppShell({
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? item.label : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
                   active
@@ -234,6 +243,8 @@ export function AppShell({
           size="sm"
           onClick={handleSignOut}
           disabled={signingOut}
+          aria-label={collapsed ? "Sign out" : undefined}
+          title={collapsed ? "Sign out" : undefined}
           className={cn(
             "mt-2 w-full justify-start text-slate-600 hover:text-red-700",
             collapsed && "justify-center px-0",

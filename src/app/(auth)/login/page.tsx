@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Lock } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/modules/auth/auth-client";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,14 +94,29 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                className="pe-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-500 hover:text-slate-700 cursor-pointer"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </CardContent>
 

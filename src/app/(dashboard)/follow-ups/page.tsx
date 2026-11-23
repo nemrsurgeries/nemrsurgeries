@@ -195,8 +195,7 @@ export default async function FollowupsPage() {
                 >
                   <div className="flex items-center justify-between gap-2 text-xs">
                     <span className="font-mono font-semibold text-blue-700">
-                      {f.surgicalCase.caseNumber} —{" "}
-                      {f.surgicalCase.diagnosis || "Untitled"}
+                      {`${f.surgicalCase.caseNumber} — ${f.surgicalCase.diagnosis || "Untitled"}`}
                     </span>
                     <span className="text-slate-500">
                       {formatDate(f.followupDate)}

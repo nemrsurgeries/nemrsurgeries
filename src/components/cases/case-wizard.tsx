@@ -346,7 +346,9 @@ export function CaseWizard({
             variant="outline"
             size="sm"
             disabled={saving}
-            onClick={() => handlePersist("DRAFT")}
+            onClick={() =>
+              handlePersist(mode === "edit" ? undefined : "DRAFT")
+            }
             className="h-7 text-xs"
           >
             {saving ? (
@@ -354,7 +356,7 @@ export function CaseWizard({
             ) : (
               <Save className="h-3 w-3" />
             )}
-            Save &amp; Continue Later
+            {mode === "edit" ? "Save Changes" : "Save & Continue Later"}
           </Button>
         </div>
       </div>
