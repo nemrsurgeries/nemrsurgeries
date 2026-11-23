@@ -1,0 +1,8 @@
+# Build settings (command, publish directory) are managed in the Netlify UI.
+
+[build.environment]
+  # BETTER_AUTH_URL is stored as a secret, but its value is the public site URL,
+  # identical to NEXT_PUBLIC_APP_URL, which Next.js inlines into the client bundle.
+  # Without this, Netlify's secrets scanning flags the URL in the build output and
+  # fails the deploy. All other secret keys remain covered by the scan.
+  SECRETS_SCAN_OMIT_KEYS = "BETTER_AUTH_URL"
