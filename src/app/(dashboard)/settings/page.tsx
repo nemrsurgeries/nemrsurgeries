@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Languages, Palette, Shield, User } from "lucide-react";
 import { requireSession } from "@/modules/auth/session";
-import { getServerI18n } from "@/lib/i18n/server";
+import { T } from "@/components/i18n/t";
 import {
   Card,
   CardContent,
@@ -14,19 +14,16 @@ import { ThemeSelector } from "@/components/theme/theme-toggle";
 import { LanguageSelector } from "@/components/i18n/language-toggle";
 
 export default async function SettingsPage() {
-  const [{ user }, { dict }] = await Promise.all([
-    requireSession(),
-    getServerI18n(),
-  ]);
+  const { user } = await requireSession();
 
   return (
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.settingsTitle}
+          <T k="pages.settingsTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.settingsDesc}
+          <T k="pages.settingsDesc" />
         </p>
       </div>
 
@@ -35,9 +32,13 @@ export default async function SettingsPage() {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
               <Palette className="h-4 w-4" />
-              <CardTitle>{dict.pages.appearanceTitle}</CardTitle>
+              <CardTitle>
+                <T k="pages.appearanceTitle" />
+              </CardTitle>
             </div>
-            <CardDescription>{dict.pages.appearanceDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.appearanceDesc" />
+            </CardDescription>
           </div>
           <ThemeSelector />
         </CardHeader>
@@ -48,9 +49,13 @@ export default async function SettingsPage() {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
               <Languages className="h-4 w-4" />
-              <CardTitle>{dict.pages.languageTitle}</CardTitle>
+              <CardTitle>
+                <T k="pages.languageTitle" />
+              </CardTitle>
             </div>
-            <CardDescription>{dict.pages.languageDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.languageDesc" />
+            </CardDescription>
           </div>
           <LanguageSelector />
         </CardHeader>
@@ -61,13 +66,19 @@ export default async function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
               <User className="h-4 w-4" />
-              <CardTitle>{dict.pages.profileCardTitle}</CardTitle>
+              <CardTitle>
+                <T k="pages.profileCardTitle" />
+              </CardTitle>
             </div>
-            <CardDescription>{dict.pages.profileCardDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.profileCardDesc" />
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" size="sm">
-              <Link href="/profile">{dict.pages.editProfileBtn}</Link>
+              <Link href="/profile">
+                <T k="pages.editProfileBtn" />
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -76,14 +87,18 @@ export default async function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
               <Shield className="h-4 w-4" />
-              <CardTitle>{dict.pages.securityCardTitle}</CardTitle>
+              <CardTitle>
+                <T k="pages.securityCardTitle" />
+              </CardTitle>
             </div>
-            <CardDescription>{dict.pages.securityCardDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.securityCardDesc" />
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" size="sm">
               <Link href="/settings/security">
-                {dict.pages.securitySettingsBtn}
+                <T k="pages.securitySettingsBtn" />
               </Link>
             </Button>
           </CardContent>
@@ -92,14 +107,18 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{dict.pages.privacyTitle}</CardTitle>
+          <CardTitle>
+            <T k="pages.privacyTitle" />
+          </CardTitle>
           <CardDescription>
-            {dict.pages.privacySignedInPrefix} {user.email}.{" "}
-            {dict.pages.privacySignedInSuffix}
+            <T k="pages.privacySignedInPrefix" /> {user.email}.{" "}
+            <T k="pages.privacySignedInSuffix" />
           </CardDescription>
         </CardHeader>
         <CardContent className="text-sm text-slate-600 dark:text-slate-300 space-y-2">
-          <p>{dict.pages.privacyBody}</p>
+          <p>
+            <T k="pages.privacyBody" />
+          </p>
         </CardContent>
       </Card>
     </div>

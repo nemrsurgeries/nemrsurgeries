@@ -3,9 +3,7 @@ import { FileText, Image as ImageIcon, ShieldCheck } from "lucide-react";
 import type { MediaCategory } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
-import { getMediaCategoryLabel } from "@/modules/cases/labels";
-import { getServerI18n } from "@/lib/i18n/server";
-import { formatDate } from "@/lib/utils";
+import { LocalizedDate, MediaCategoryText, T } from "@/components/i18n/t";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -30,10 +28,9 @@ export default async function MediaLibraryPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  const [{ user }, { category }, { locale, dict }] = await Promise.all([
+  const [{ user }, { category }] = await Promise.all([
     requireSession(),
     searchParams,
-    getServerI18n(),
   ]);
   const activeCategory =
     category && VALID_CATEGORIES.has(category)
@@ -58,10 +55,10 @@ export default async function MediaLibraryPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.mediaTitle}
+          <T k="pages.mediaTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.mediaDesc}
+          <T k="pages.mediaDesc" />
         </p>
       </div>
 
@@ -75,7 +72,7 @@ export default async function MediaLibraryPage({
               : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70"
           }`}
         >
-          {dict.pages.allCategories}
+          <T k="pages.allCategories" />
         </Link>
         {Array.from(VALID_CATEGORIES).map((cat) => {
           const typed = cat as MediaCategory;
@@ -90,7 +87,7 @@ export default async function MediaLibraryPage({
                   : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70"
               }`}
             >
-              {getMediaCategoryLabel(typed, locale)}
+              <MediaCategoryText category={typed} />
             </Link>
           );
         })}
@@ -99,14 +96,16 @@ export default async function MediaLibraryPage({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>
-            {dict.pages.mediaTitle} ({items.length})
+            <T k="pages.mediaTitle" /> ({items.length})
           </CardTitle>
-          <CardDescription>{dict.pages.mediaDesc}</CardDescription>
+          <CardDescription>
+            <T k="pages.mediaDesc" />
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-              {dict.pages.noMedia}
+              <T k="pages.noMedia" />
             </p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -135,9 +134,10 @@ export default async function MediaLibraryPage({
                             {item.surgicalCase.caseNumber}
                           </span>{" "}
                           &middot;{" "}
-                          {item.surgicalCase.diagnosis ||
-                            dict.dashboard.untitledDiagnosis}{" "}
-                          &middot; {formatDate(item.createdAt, undefined, locale)}
+                          {item.surgicalCase.diagnosis || (
+                            <T k="dashboard.untitledDiagnosis" />
+                          )}{" "}
+                          &middot; <LocalizedDate value={item.createdAt} />
                         </p>
                       </div>
                     </div>
@@ -149,7 +149,7 @@ export default async function MediaLibraryPage({
                         </Badge>
                       )}
                       <Badge variant="secondary">
-                        {getMediaCategoryLabel(item.category, locale)}
+                        <MediaCategoryText category={item.category} />
                       </Badge>
                     </div>
                   </Link>

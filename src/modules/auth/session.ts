@@ -1,7 +1,7 @@
+import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
-import { db } from "@/lib/db";
 
 export interface AuthenticatedUser {
   id: string;
@@ -14,46 +14,48 @@ export interface AuthenticatedUser {
   createdAt: Date;
 }
 
-export async function getServerSession() {
+export const getServerSession = cache(async () => {
   const hdrs = await headers();
   return auth.api.getSession({ headers: hdrs });
-}
+});
 
 /**
  * Server-side guard for authenticated pages. Redirects to /login if unauthenticated.
+ * Deduplicated per request via React cache() and reads user fields directly from
+ * the Better Auth session payload to avoid an extra DB round-trip.
  */
-export async function requireSession(): Promise<{
+export const requireSession = cache(async (): Promise<{
   sessionId: string;
   user: AuthenticatedUser;
-}> {
+}> => {
   const session = await getServerSession();
   if (!session?.user?.id) {
     redirect("/login");
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      emailVerified: true,
-      professionalTitle: true,
-      hospital: true,
-      profileImage: true,
-      createdAt: true,
-    },
-  });
-
-  if (!user) {
-    redirect("/login");
-  }
+  const sessionUser = session.user as typeof session.user & {
+    professionalTitle?: string | null;
+    hospital?: string | null;
+    profileImage?: string | null;
+  };
 
   return {
     sessionId: session.session.id,
-    user,
+    user: {
+      id: sessionUser.id,
+      name: sessionUser.name,
+      email: sessionUser.email,
+      emailVerified: Boolean(sessionUser.emailVerified),
+      professionalTitle: sessionUser.professionalTitle ?? null,
+      hospital: sessionUser.hospital ?? null,
+      profileImage: sessionUser.profileImage ?? null,
+      createdAt:
+        sessionUser.createdAt instanceof Date
+          ? sessionUser.createdAt
+          : new Date(sessionUser.createdAt),
+    },
   };
-}
+});
 
 /**
  * Server-side guard for Server Actions & API Route Handlers (throws instead of redirecting).

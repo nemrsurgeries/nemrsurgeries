@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { getServerSession } from "@/modules/auth/session";
-import { getServerI18n } from "@/lib/i18n/server";
+import { T } from "@/components/i18n/t";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LanguageToggle } from "@/components/i18n/language-toggle";
 
@@ -10,10 +10,7 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, { dict }] = await Promise.all([
-    getServerSession(),
-    getServerI18n(),
-  ]);
+  const session = await getServerSession();
   if (session?.user?.id) {
     redirect("/dashboard");
   }
@@ -32,10 +29,10 @@ export default async function AuthLayout({
           </div>
           <div>
             <p className="text-base font-semibold tracking-tight leading-none">
-              {dict.brand.name}
+              <T k="brand.name" />
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {dict.brand.authSubtitle}
+              <T k="brand.authSubtitle" />
             </p>
           </div>
         </div>
@@ -43,7 +40,7 @@ export default async function AuthLayout({
       </div>
 
       <footer className="mt-10 text-center text-xs text-slate-500 dark:text-slate-400">
-        {dict.brand.authFooter}
+        <T k="brand.authFooter" />
       </footer>
     </div>
   );

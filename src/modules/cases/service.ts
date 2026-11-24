@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { computeOwnedCaseAnalytics } from "@/modules/dashboard/analytics";
 import type { CaseListFilters, PostoperativePlan } from "./schemas";
 
 /**
@@ -381,5 +382,91 @@ export async function getDashboardOverview(userId: string) {
     },
     recentCreated,
     recentUpdated,
+  };
+}
+
+/**
+ * Consolidated dashboard loader: fetches all non-archived owned case summaries
+ * and share counts in 3 parallel queries (instead of 11 separate queries) and
+ * computes overview stats, recent lists, and analytics in memory.
+ */
+export async function getDashboardPageData(userId: string) {
+  const now = new Date();
+  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const [ownedCases, sharedWithMeCount, sharedByMeCount] = await Promise.all([
+    db.surgicalCase.findMany({
+      where: { ownerId: userId, status: { not: "ARCHIVED" } },
+      select: {
+        id: true,
+        caseNumber: true,
+        diagnosis: true,
+        procedure: true,
+        fractureClassification: true,
+        hospital: true,
+        operationDate: true,
+        myRole: true,
+        status: true,
+        nextFollowupDate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    db.caseShare.count({
+      where: { sharedWithUserId: userId, revokedAt: null },
+    }),
+    db.caseShare.count({
+      where: { grantedBy: userId, revokedAt: null },
+    }),
+  ]);
+
+  let completedOwned = 0;
+  let draftOwned = 0;
+  let awaitingFollowup = 0;
+  let upcomingFollowups = 0;
+  let overdueFollowups = 0;
+
+  const nowMs = now.getTime();
+  const in30DaysMs = in30Days.getTime();
+
+  for (const c of ownedCases) {
+    if (c.status === "COMPLETED") completedOwned++;
+    else if (c.status === "DRAFT") draftOwned++;
+    else if (c.status === "AWAITING_FOLLOWUP") awaitingFollowup++;
+
+    if (c.status !== "COMPLETED" && c.nextFollowupDate) {
+      const followupMs = c.nextFollowupDate.getTime();
+      if (followupMs < nowMs) {
+        overdueFollowups++;
+      } else if (followupMs <= in30DaysMs) {
+        upcomingFollowups++;
+      }
+    }
+  }
+
+  const recentCreated = [...ownedCases]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 5);
+
+  const recentUpdated = [...ownedCases]
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .slice(0, 5);
+
+  const analytics = computeOwnedCaseAnalytics(ownedCases);
+
+  return {
+    stats: {
+      totalOwned: ownedCases.length,
+      completedOwned,
+      draftOwned,
+      awaitingFollowup,
+      upcomingFollowups,
+      overdueFollowups,
+      sharedWithMeCount,
+      sharedByMeCount,
+    },
+    recentCreated,
+    recentUpdated,
+    analytics,
   };
 }

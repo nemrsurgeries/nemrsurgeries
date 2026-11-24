@@ -163,12 +163,14 @@ interface CaseDetailClientProps {
   data: CaseDetailViewData;
   role: Exclude<EffectiveCaseRole, "NONE">;
   currentUserId: string;
+  initialSignedUrls?: Record<string, string>;
 }
 
 export function CaseDetailClient({
   data,
   role,
   currentUserId,
+  initialSignedUrls,
 }: CaseDetailClientProps) {
   const router = useRouter();
   const [status, setStatus] = useState<CaseStatus>(data.status);
@@ -624,6 +626,7 @@ export function CaseDetailClient({
             currentUserId={currentUserId}
             role={role}
             media={data.media}
+            initialSignedUrls={initialSignedUrls}
           />
         </Tabs.Content>
 
