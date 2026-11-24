@@ -2,6 +2,7 @@
   "name": "ortho-case-platform",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.19.0",
   "scripts": {
     "dev": "next dev --webpack",
     "build": "npx prisma generate && next build --webpack",
@@ -56,6 +57,7 @@
     "prisma": "^6.8.2",
     "tailwindcss": "^4.1.7",
     "tsx": "^4.19.4",
+    "turbo": "^2.11.13",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
   }
