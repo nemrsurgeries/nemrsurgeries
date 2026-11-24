@@ -16,30 +16,32 @@ export default async function AuthLayout({
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between px-4 py-8 sm:px-6 lg:px-8">
-      <div className="absolute end-4 top-4 sm:end-6 sm:top-6 flex items-center gap-2">
+    <div className="min-h-dvh bg-slate-50 dark:bg-slate-950 flex flex-col justify-between px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      {/* Top Utility Bar (never overlaps brand header on small screens) */}
+      <header className="flex w-full items-center justify-end gap-2">
         <LanguageToggle />
         <ThemeToggle />
-      </div>
+      </header>
 
-      <div className="mx-auto flex w-full max-w-md flex-col items-center">
-        <div className="mb-8 flex items-center gap-2.5 text-slate-900 dark:text-slate-100">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-white">
+      {/* Centered Auth Content */}
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center py-6 sm:py-10">
+        <div className="mb-6 sm:mb-8 flex max-w-full items-center gap-2.5 text-slate-900 dark:text-slate-100">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white">
             <ShieldCheck className="h-5 w-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-base font-semibold tracking-tight leading-none">
               <T k="brand.name" />
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">
               <T k="brand.authSubtitle" />
             </p>
           </div>
         </div>
         <div className="w-full">{children}</div>
-      </div>
+      </main>
 
-      <footer className="mt-10 text-center text-xs text-slate-500 dark:text-slate-400">
+      <footer className="pb-2 pt-4 text-center text-xs text-slate-500 dark:text-slate-400 text-balance">
         <T k="brand.authFooter" />
       </footer>
     </div>
