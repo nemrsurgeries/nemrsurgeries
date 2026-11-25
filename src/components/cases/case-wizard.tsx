@@ -67,6 +67,8 @@ const EMPTY_FORM: CaseFormInput = {
   nextFollowupDate: "",
 };
 
+const LOCAL_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
 interface CaseWizardProps {
   mode: "create" | "edit";
   caseId?: string;
@@ -123,17 +125,27 @@ export function CaseWizard({
           const parsed = JSON.parse(raw) as {
             form?: CaseFormInput;
             step?: number;
+            savedAt?: string;
           };
-          if (parsed.form) {
+          const savedAt = parsed.savedAt ? Date.parse(parsed.savedAt) : NaN;
+          const isFresh = Number.isFinite(savedAt) &&
+            Date.now() - savedAt <= LOCAL_DRAFT_MAX_AGE_MS;
+          if (parsed.form && isFresh) {
             setForm({ ...baseForm, ...parsed.form });
             if (parsed.step && parsed.step >= 1 && parsed.step <= 5) {
               setStep(parsed.step);
             }
             setRestoredDraft(true);
+          } else {
+            window.localStorage.removeItem(storageKey);
           }
         }
       } catch {
-        // ignore storage errors
+        try {
+          window.localStorage.removeItem(storageKey);
+        } catch {
+          // Browser storage may be disabled; continue without restoring a draft.
+        }
       }
     }, 0);
     return () => window.clearTimeout(timer);
@@ -142,6 +154,7 @@ export function CaseWizard({
 
   // Autosave to localStorage on form/step changes
   useEffect(() => {
+    let expiryTimer: number | undefined;
     const timer = window.setTimeout(() => {
       try {
         window.localStorage.setItem(
@@ -154,11 +167,31 @@ export function CaseWizard({
             minute: "2-digit",
           }),
         );
+        expiryTimer = window.setTimeout(() => {
+          try {
+            const raw = window.localStorage.getItem(storageKey);
+            if (!raw) return;
+            const savedAt = Date.parse(
+              (JSON.parse(raw) as { savedAt?: string }).savedAt ?? "",
+            );
+            if (
+              !Number.isFinite(savedAt) ||
+              Date.now() - savedAt >= LOCAL_DRAFT_MAX_AGE_MS
+            ) {
+              window.localStorage.removeItem(storageKey);
+            }
+          } catch {
+            // Ignore storage failures; stale drafts are also checked on restore.
+          }
+        }, LOCAL_DRAFT_MAX_AGE_MS);
       } catch {
         // ignore quota errors
       }
     }, 500);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      if (expiryTimer !== undefined) window.clearTimeout(expiryTimer);
+    };
   }, [form, step, storageKey]);
 
   function updateField<K extends keyof CaseFormInput>(
@@ -339,6 +372,11 @@ export function CaseWizard({
             </span>
           )}
         </div>
+        <span className="basis-full sm:basis-auto">
+          {isAr
+            ? "المسودة محفوظة على هذا المتصفح فقط، وتُحذف عند تسجيل الخروج أو بعد 24 ساعة."
+            : "Drafts stay in this browser and are cleared on sign-out or after 24 hours."}
+        </span>
         <div className="flex items-center gap-2">
           {restoredDraft && (
             <Button
@@ -391,6 +429,9 @@ export function CaseWizard({
               <p>
                 <strong>{dict.wizard.deidPolicyTitle}</strong>{" "}
                 {dict.wizard.deidPolicyBody}
+                {isAr
+                  ? " لا تضع بيانات تعريفية في الملاحظات أو الصور أو الملفات المرفقة أيضاً."
+                  : " Check free-text notes, image labels, and uploaded files for identifiers too."}
               </p>
             </div>
 

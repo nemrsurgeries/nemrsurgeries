@@ -90,7 +90,7 @@ export function CaseLibraryClient({
 
   const [viewMode, setViewMode] = useLocalStorage<"table" | "cards">(
     "orthocase-cases-view",
-    "table",
+    "cards",
     VIEW_MODES,
   );
   const [showFilters, setShowFilters] = useState(

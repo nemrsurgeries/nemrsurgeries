@@ -117,6 +117,16 @@ export function AppShell({
     setSigningOut(true);
     try {
       await authClient.signOut();
+      try {
+        for (let index = window.localStorage.length - 1; index >= 0; index--) {
+          const key = window.localStorage.key(index);
+          if (key?.startsWith("orthocase:wizard:")) {
+            window.localStorage.removeItem(key);
+          }
+        }
+      } catch {
+        // A browser storage failure should not block sign-out.
+      }
       toast.success(dict.nav.signedOut);
       router.push("/login");
       router.refresh();
