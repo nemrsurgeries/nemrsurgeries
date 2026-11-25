@@ -55,13 +55,13 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{dict.auth.signInTitle}</CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="p-5 sm:p-6">
+        <CardTitle className="text-lg sm:text-xl">{dict.auth.signInTitle}</CardTitle>
         <CardDescription>{dict.auth.signInDesc}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-5 pb-5 sm:px-6 sm:pb-6">
           {error && (
             <div
               role="alert"
@@ -79,13 +79,14 @@ export default function LoginPage() {
               autoComplete="email"
               required
               placeholder="dr.name@hospital.org"
+              className="h-10 sm:h-9 text-base sm:text-sm"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
               <Label htmlFor="password">{dict.auth.passwordLabel}</Label>
               <Link
                 href="/forgot-password"
@@ -100,7 +101,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className="pe-10"
+                className="h-10 sm:h-9 pe-10 text-base sm:text-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -124,8 +125,8 @@ export default function LoginPage() {
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={submitting}>
+        <CardFooter className="flex flex-col gap-3 px-5 pb-5 sm:px-6 sm:pb-6">
+          <Button type="submit" className="h-10 sm:h-9 w-full" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -138,7 +139,7 @@ export default function LoginPage() {
               </>
             )}
           </Button>
-          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
             {dict.auth.inviteOnlyHint}{" "}
             <Link
               href="/register"

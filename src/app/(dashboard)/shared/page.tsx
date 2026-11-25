@@ -2,12 +2,15 @@ import Link from "next/link";
 import { Search, Users } from "lucide-react";
 import { requireSession } from "@/modules/auth/session";
 import { listSharedWithMeCases } from "@/modules/sharing/service";
-import { CASE_STATUS_META, getCaseStatusLabel } from "@/modules/cases/labels";
-import { getServerI18n } from "@/lib/i18n/server";
-import { formatDate } from "@/lib/utils";
+import { CASE_STATUS_META } from "@/modules/cases/labels";
+import {
+  CaseStatusText,
+  LocalizedDate,
+  LocalizedInput,
+  T,
+} from "@/components/i18n/t";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default async function SharedWithMePage({
@@ -15,21 +18,17 @@ export default async function SharedWithMePage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ user }, { q }, { locale, dict }] = await Promise.all([
-    requireSession(),
-    searchParams,
-    getServerI18n(),
-  ]);
+  const [{ user }, { q }] = await Promise.all([requireSession(), searchParams]);
   const shares = await listSharedWithMeCases(user.id, q);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.sharedTitle}
+          <T k="pages.sharedTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.sharedDesc}
+          <T k="pages.sharedDesc" />
         </p>
       </div>
 
@@ -38,21 +37,23 @@ export default async function SharedWithMePage({
           <form action="/shared" method="GET" className="flex gap-2">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-              <Input
+              <LocalizedInput
                 id="shared-search"
                 name="q"
                 defaultValue={q ?? ""}
-                placeholder={dict.cases.searchPlaceholder}
-                aria-label={dict.common.search}
+                placeholderKey="cases.searchPlaceholder"
+                ariaLabelKey="common.search"
                 className="ps-9"
               />
             </div>
             <Button type="submit" size="sm">
-              {dict.common.search}
+              <T k="common.search" />
             </Button>
             {q && (
               <Button asChild variant="outline" size="sm">
-                <Link href="/shared">{dict.common.clear}</Link>
+                <Link href="/shared">
+                  <T k="common.clear" />
+                </Link>
               </Button>
             )}
           </form>
@@ -66,10 +67,14 @@ export default async function SharedWithMePage({
               <Users className="h-5 w-5" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {q ? dict.cases.noMatchingCases : dict.pages.sharedEmpty}
+              {q ? (
+                <T k="cases.noMatchingCases" />
+              ) : (
+                <T k="pages.sharedEmpty" />
+              )}
             </h3>
             <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-              {dict.pages.sharedDesc}
+              <T k="pages.sharedDesc" />
             </p>
           </CardContent>
         </Card>
@@ -95,21 +100,23 @@ export default async function SharedWithMePage({
                                 : "outline"
                             }
                           >
-                            {share.permission === "EDITOR"
-                              ? dict.common.editor
-                              : dict.common.viewer}
+                            {share.permission === "EDITOR" ? (
+                              <T k="common.editor" />
+                            ) : (
+                              <T k="common.viewer" />
+                            )}
                           </Badge>
                           <Badge variant={statusMeta.variant}>
-                            {getCaseStatusLabel(c.status, locale)}
+                            <CaseStatusText status={c.status} />
                           </Badge>
                         </div>
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-700 dark:group-hover:text-blue-400 line-clamp-2">
-                          {c.diagnosis || dict.dashboard.untitledDiagnosis}
+                          {c.diagnosis || <T k="dashboard.untitledDiagnosis" />}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
-                          {c.procedure || dict.common.none}
+                          {c.procedure || <T k="common.none" />}
                         </p>
                       </div>
                     </div>
@@ -117,9 +124,11 @@ export default async function SharedWithMePage({
                     <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 text-xs text-slate-500 dark:text-slate-400 space-y-1">
                       <div className="flex items-center justify-between">
                         <span>
-                          {dict.common.owner}: {c.owner.name}
+                          <T k="common.owner" />: {c.owner.name}
                         </span>
-                        <span>{formatDate(c.operationDate, undefined, locale)}</span>
+                        <span>
+                          <LocalizedDate value={c.operationDate} />
+                        </span>
                       </div>
                       {c.fractureClassification && (
                         <p className="text-[11px] text-slate-400 dark:text-slate-500">

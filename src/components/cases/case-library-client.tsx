@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
+  Edit3,
+  Eye,
   Filter,
   FolderOpen,
   LayoutGrid,
@@ -88,7 +90,7 @@ export function CaseLibraryClient({
 
   const [viewMode, setViewMode] = useLocalStorage<"table" | "cards">(
     "orthocase-cases-view",
-    "table",
+    "cards",
     VIEW_MODES,
   );
   const [showFilters, setShowFilters] = useState(
@@ -112,10 +114,43 @@ export function CaseLibraryClient({
   const [dateFrom, setDateFrom] = useState(initialFilters.dateFrom ?? "");
   const [dateTo, setDateTo] = useState(initialFilters.dateTo ?? "");
   const [sort, setSort] = useState(initialFilters.sort);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const lastSubmittedQRef = useRef(initialFilters.q ?? "");
 
   const hasActiveFilters = Boolean(
     q || status || myRole || hospital || surgeon || procedure || dateFrom || dateTo,
   );
+
+  // Live debounced search (300ms) so users don't have to click a Search button
+  useEffect(() => {
+    if (q === lastSubmittedQRef.current) return;
+    const handle = setTimeout(() => {
+      lastSubmittedQRef.current = q;
+      const params = new URLSearchParams(searchParams.toString());
+      if (q.trim()) {
+        params.set("q", q.trim());
+      } else {
+        params.delete("q");
+      }
+      params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `/cases?${qs}` : "/cases");
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [q, router, searchParams]);
+
+  // Press "/" anywhere outside an input to focus the search box
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   function applyFilters(overrides?: Record<string, string>) {
     const next: Record<string, string> = {
@@ -181,20 +216,35 @@ export function CaseLibraryClient({
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <Input
+                ref={searchInputRef}
                 id="cases-search"
                 name="q"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={dict.cases.searchPlaceholder}
                 aria-label={dict.common.search}
-                className="ps-9"
+                className="ps-9 pe-12"
               />
+              {q ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ("");
+                    searchInputRef.current?.focus();
+                  }}
+                  aria-label="Clear search"
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none hidden sm:inline-flex absolute end-2.5 top-1/2 -translate-y-1/2 items-center rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                  /
+                </kbd>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="submit" size="sm">
-                {dict.common.search}
-              </Button>
               <Button
                 type="button"
                 variant={showFilters ? "secondary" : "outline"}
@@ -451,6 +501,9 @@ export function CaseLibraryClient({
                   <th className="px-4 py-3 text-start">{dict.cases.colOpDate}</th>
                   <th className="px-4 py-3 text-start">{dict.cases.colRoleHospital}</th>
                   <th className="px-4 py-3 text-start">{dict.cases.colStatus}</th>
+                  <th className="px-3 py-3 text-end w-20">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
@@ -459,11 +512,13 @@ export function CaseLibraryClient({
                   return (
                     <tr
                       key={c.id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/70 transition-colors"
+                      onClick={() => router.push(`/cases/${c.id}`)}
+                      className="group cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/70 transition-colors"
                     >
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Link
                           href={`/cases/${c.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 hover:underline"
                         >
                           {c.caseNumber}
@@ -472,7 +527,8 @@ export function CaseLibraryClient({
                       <td className="px-4 py-3 min-w-[220px]">
                         <Link
                           href={`/cases/${c.id}`}
-                          className="font-medium text-slate-900 dark:text-slate-100 hover:text-blue-700 dark:hover:text-blue-300 block"
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-medium text-slate-900 dark:text-slate-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 block transition-colors"
                         >
                           {c.diagnosis || "Untitled diagnosis"}
                         </Link>
@@ -515,6 +571,29 @@ export function CaseLibraryClient({
                         <Badge variant={statusMeta.variant}>
                           {getCaseStatusLabel(c.status, locale)}
                         </Badge>
+                      </td>
+                      <td
+                        className="px-3 py-3 whitespace-nowrap text-end"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <Link
+                            href={`/cases/${c.id}`}
+                            title="View case"
+                            aria-label={`View ${c.caseNumber}`}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                          <Link
+                            href={`/cases/${c.id}/edit`}
+                            title={dict.common.edit}
+                            aria-label={`Edit ${c.caseNumber}`}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );

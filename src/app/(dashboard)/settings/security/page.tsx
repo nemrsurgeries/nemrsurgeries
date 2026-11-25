@@ -1,13 +1,10 @@
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
-import { getServerI18n } from "@/lib/i18n/server";
+import { T } from "@/components/i18n/t";
 import { SecuritySettings } from "@/components/users/security-settings";
 
 export default async function SecuritySettingsPage() {
-  const [{ user, sessionId }, { dict }] = await Promise.all([
-    requireSession(),
-    getServerI18n(),
-  ]);
+  const { user, sessionId } = await requireSession();
 
   const rawSessions = await db.session.findMany({
     where: {
@@ -33,10 +30,10 @@ export default async function SecuritySettingsPage() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.securityPageTitle}
+          <T k="pages.securityPageTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.securityPageDesc}
+          <T k="pages.securityPageDesc" />
         </p>
       </div>
       <SecuritySettings userEmail={user.email} sessions={sessions} />

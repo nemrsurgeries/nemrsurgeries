@@ -8,12 +8,15 @@ import {
   Plus,
 } from "lucide-react";
 import { requireSession } from "@/modules/auth/session";
-import { getDashboardOverview } from "@/modules/cases/service";
-import { getOwnedCaseAnalytics } from "@/modules/dashboard/analytics";
+import { getDashboardPageData } from "@/modules/cases/service";
 import { DashboardAnalyticsCharts } from "@/components/charts/dashboard-analytics-charts";
-import { CASE_STATUS_META, getCaseStatusLabel } from "@/modules/cases/labels";
-import { getServerI18n } from "@/lib/i18n/server";
-import { formatDate } from "@/lib/utils";
+import { CASE_STATUS_META } from "@/modules/cases/labels";
+import {
+  CaseStatusText,
+  LocalizedDate,
+  T,
+  type TranslationKey,
+} from "@/components/i18n/t";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,57 +28,59 @@ import {
 } from "@/components/ui/card";
 
 export default async function DashboardPage() {
-  const [{ user }, { locale, dict }] = await Promise.all([
-    requireSession(),
-    getServerI18n(),
-  ]);
-  const [{ stats, recentCreated, recentUpdated }, analytics] = await Promise.all(
-    [getDashboardOverview(user.id), getOwnedCaseAnalytics(user.id)],
-  );
+  const { user } = await requireSession();
+  const { stats, recentCreated, recentUpdated, analytics } =
+    await getDashboardPageData(user.id);
 
-  const ownedMetrics = [
-    { label: dict.dashboard.totalOwned, value: stats.totalOwned, href: "/cases" },
+  const ownedMetrics: { labelKey: TranslationKey; value: number; href: string }[] = [
+    { labelKey: "dashboard.totalOwned", value: stats.totalOwned, href: "/cases" },
     {
-      label: dict.dashboard.completedCases,
+      labelKey: "dashboard.completedCases",
       value: stats.completedOwned,
       href: "/cases?status=COMPLETED",
     },
     {
-      label: dict.dashboard.draftCases,
+      labelKey: "dashboard.draftCases",
       value: stats.draftOwned,
       href: "/cases?status=DRAFT",
     },
     {
-      label: dict.dashboard.awaitingFollowup,
+      labelKey: "dashboard.awaitingFollowup",
       value: stats.awaitingFollowup,
       href: "/cases?status=AWAITING_FOLLOWUP",
     },
   ];
 
-  const collabAndFollowupMetrics = [
+  const collabAndFollowupMetrics: {
+    labelKey: TranslationKey;
+    value: number;
+    href: string;
+    icon: typeof CalendarClock;
+    tone: string;
+  }[] = [
     {
-      label: dict.dashboard.upcomingFollowups30d,
+      labelKey: "dashboard.upcomingFollowups30d",
       value: stats.upcomingFollowups,
       href: "/follow-ups",
       icon: CalendarClock,
       tone: "text-blue-700 dark:text-blue-400",
     },
     {
-      label: dict.dashboard.overdueFollowups,
+      labelKey: "dashboard.overdueFollowups",
       value: stats.overdueFollowups,
       href: "/follow-ups",
       icon: AlertCircle,
       tone: stats.overdueFollowups > 0 ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400",
     },
     {
-      label: dict.dashboard.sharedWithMe,
+      labelKey: "dashboard.sharedWithMe",
       value: stats.sharedWithMeCount,
       href: "/shared",
       icon: FolderKanban,
       tone: "text-slate-600 dark:text-slate-300",
     },
     {
-      label: dict.dashboard.sharedByMe,
+      labelKey: "dashboard.sharedByMe",
       value: stats.sharedByMeCount,
       href: "/shared-by-me",
       icon: Clock,
@@ -88,23 +93,23 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {dict.dashboard.welcomeBack} {user.name}
+            <T k="dashboard.welcomeBack" /> {user.name}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {dict.dashboard.subtitle}
+            <T k="dashboard.subtitle" />
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
             <Link href="/invitations">
               <MailPlus className="h-4 w-4" />
-              {dict.dashboard.inviteColleague}
+              <T k="dashboard.inviteColleague" />
             </Link>
           </Button>
           <Button asChild>
             <Link href="/cases/new">
               <Plus className="h-4 w-4" />
-              {dict.dashboard.newCase}
+              <T k="dashboard.newCase" />
             </Link>
           </Button>
         </div>
@@ -113,10 +118,12 @@ export default async function DashboardPage() {
       {/* Personal Owned Statistics */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {ownedMetrics.map((m) => (
-          <Link key={m.label} href={m.href} className="group block">
+          <Link key={m.labelKey} href={m.href} className="group block">
             <Card className="transition-colors group-hover:border-blue-300 dark:group-hover:border-blue-700">
               <CardHeader className="pb-3">
-                <CardDescription>{m.label}</CardDescription>
+                <CardDescription>
+                  <T k={m.labelKey} />
+                </CardDescription>
                 <CardTitle className="text-2xl font-semibold tabular-nums">
                   {m.value}
                 </CardTitle>
@@ -131,11 +138,13 @@ export default async function DashboardPage() {
         {collabAndFollowupMetrics.map((m) => {
           const Icon = m.icon;
           return (
-            <Link key={m.label} href={m.href} className="group block">
+            <Link key={m.labelKey} href={m.href} className="group block">
               <Card className="transition-colors group-hover:border-blue-300 dark:group-hover:border-blue-700">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardDescription>{m.label}</CardDescription>
+                    <CardDescription>
+                      <T k={m.labelKey} />
+                    </CardDescription>
                     <Icon className={`h-4 w-4 ${m.tone}`} />
                   </div>
                   <CardTitle className="text-2xl font-semibold tabular-nums">
@@ -153,24 +162,28 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle>{dict.dashboard.recentlyCreated}</CardTitle>
+              <CardTitle>
+                <T k="dashboard.recentlyCreated" />
+              </CardTitle>
               <CardDescription>
-                {dict.dashboard.recentlyCreatedDesc}
+                <T k="dashboard.recentlyCreatedDesc" />
               </CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/cases">{dict.common.viewAll}</Link>
+              <Link href="/cases">
+                <T k="common.viewAll" />
+              </Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentCreated.length === 0 ? (
               <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                {dict.dashboard.noCasesYet}.{" "}
+                <T k="dashboard.noCasesYet" />.{" "}
                 <Link
                   href="/cases/new"
                   className="font-medium text-blue-700 dark:text-blue-400 hover:underline"
                 >
-                  {dict.dashboard.createFirstCase}
+                  <T k="dashboard.createFirstCase" />
                 </Link>
               </p>
             ) : (
@@ -189,15 +202,15 @@ export default async function DashboardPage() {
                             {c.caseNumber}
                           </span>
                           <span className="text-xs text-slate-400 dark:text-slate-500">
-                            {formatDate(c.operationDate ?? c.createdAt, undefined, locale)}
+                            <LocalizedDate value={c.operationDate ?? c.createdAt} />
                           </span>
                         </div>
                         <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100 mt-0.5">
-                          {c.diagnosis || dict.dashboard.untitledDiagnosis}
+                          {c.diagnosis || <T k="dashboard.untitledDiagnosis" />}
                         </p>
                       </div>
                       <Badge variant={meta.variant}>
-                        {getCaseStatusLabel(c.status, locale)}
+                        <CaseStatusText status={c.status} />
                       </Badge>
                     </Link>
                   );
@@ -210,19 +223,23 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle>{dict.dashboard.recentlyUpdated}</CardTitle>
+              <CardTitle>
+                <T k="dashboard.recentlyUpdated" />
+              </CardTitle>
               <CardDescription>
-                {dict.dashboard.recentlyUpdatedDesc}
+                <T k="dashboard.recentlyUpdatedDesc" />
               </CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/cases?sort=updated_desc">{dict.common.viewAll}</Link>
+              <Link href="/cases?sort=updated_desc">
+                <T k="common.viewAll" />
+              </Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentUpdated.length === 0 ? (
               <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                {dict.dashboard.noCasesYet}
+                <T k="dashboard.noCasesYet" />
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -240,15 +257,15 @@ export default async function DashboardPage() {
                             {c.caseNumber}
                           </span>
                           <span className="text-xs text-slate-400 dark:text-slate-500">
-                            {formatDate(c.updatedAt, undefined, locale)}
+                            <LocalizedDate value={c.updatedAt} />
                           </span>
                         </div>
                         <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100 mt-0.5">
-                          {c.diagnosis || dict.dashboard.untitledDiagnosis}
+                          {c.diagnosis || <T k="dashboard.untitledDiagnosis" />}
                         </p>
                       </div>
                       <Badge variant={meta.variant}>
-                        {getCaseStatusLabel(c.status, locale)}
+                        <CaseStatusText status={c.status} />
                       </Badge>
                     </Link>
                   );
@@ -260,7 +277,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Personal Analytics Charts */}
-      <DashboardAnalyticsCharts analytics={analytics} dict={dict} />
+      <DashboardAnalyticsCharts analytics={analytics} />
     </div>
   );
 }

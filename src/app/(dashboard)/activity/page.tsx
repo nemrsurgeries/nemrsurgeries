@@ -2,9 +2,7 @@ import Link from "next/link";
 import { Activity } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
-import { getAuditActionLabel } from "@/modules/cases/labels";
-import { getServerI18n } from "@/lib/i18n/server";
-import { formatDate } from "@/lib/utils";
+import { AuditActionText, LocalizedDate, T } from "@/components/i18n/t";
 import {
   Card,
   CardContent,
@@ -14,10 +12,7 @@ import {
 } from "@/components/ui/card";
 
 export default async function ActivityLogPage() {
-  const [{ user }, { locale, dict }] = await Promise.all([
-    requireSession(),
-    getServerI18n(),
-  ]);
+  const { user } = await requireSession();
 
   const logs = await db.auditLog.findMany({
     where: {
@@ -35,10 +30,10 @@ export default async function ActivityLogPage() {
     <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.activityTitle}
+          <T k="pages.activityTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.activityDesc}
+          <T k="pages.activityDesc" />
         </p>
       </div>
 
@@ -46,14 +41,18 @@ export default async function ActivityLogPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
             <Activity className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-            <CardTitle>{dict.pages.activityTitle}</CardTitle>
+            <CardTitle>
+              <T k="pages.activityTitle" />
+            </CardTitle>
           </div>
-          <CardDescription>{dict.pages.activityDesc}</CardDescription>
+          <CardDescription>
+            <T k="pages.activityDesc" />
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              {dict.pages.noActivity}
+              <T k="pages.noActivity" />
             </p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -64,7 +63,7 @@ export default async function ActivityLogPage() {
                 >
                   <div className="text-sm">
                     <span className="font-medium text-slate-900 dark:text-slate-100">
-                      {getAuditActionLabel(log.action, locale)}
+                      <AuditActionText action={log.action} />
                     </span>
                     {log.surgicalCase && (
                       <>
@@ -79,21 +78,20 @@ export default async function ActivityLogPage() {
                       </>
                     )}
                     <span className="text-xs text-slate-500 dark:text-slate-400 ms-2">
-                      {log.user?.name ?? dict.common.system}
+                      {log.user?.name ?? <T k="common.system" />}
                     </span>
                   </div>
                   <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                    {formatDate(
-                      log.createdAt,
-                      {
+                    <LocalizedDate
+                      value={log.createdAt}
+                      options={{
                         year: "numeric",
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
-                      },
-                      locale,
-                    )}
+                      }}
+                    />
                   </span>
                 </div>
               ))}

@@ -54,6 +54,7 @@ interface CaseMediaPanelProps {
   currentUserId: string;
   role: Exclude<EffectiveCaseRole, "NONE">;
   media: CaseMediaItem[];
+  initialSignedUrls?: Record<string, string>;
 }
 
 const CATEGORIES: MediaCategory[] = [
@@ -77,6 +78,7 @@ export function CaseMediaPanel({
   currentUserId,
   role,
   media,
+  initialSignedUrls,
 }: CaseMediaPanelProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -90,8 +92,14 @@ export function CaseMediaPanel({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Cache of short-lived signed URLs for thumbnails / viewer
-  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  // Cache of short-lived signed URLs for thumbnails / viewer (seeded from server)
+  const [clientSignedUrls, setClientSignedUrls] = useState<
+    Record<string, string>
+  >({});
+  const signedUrls = useMemo(
+    () => ({ ...initialSignedUrls, ...clientSignedUrls }),
+    [initialSignedUrls, clientSignedUrls],
+  );
   const [lightboxMediaId, setLightboxMediaId] = useState<string | null>(null);
   const [pdfPreviewMedia, setPdfPreviewMedia] = useState<{
     item: CaseMediaItem;
@@ -147,7 +155,7 @@ export function CaseMediaPanel({
       }
       const data = (await res.json()) as { url: string };
       if (!download) {
-        setSignedUrls((prev) => ({ ...prev, [mediaId]: data.url }));
+        setClientSignedUrls((prev) => ({ ...prev, [mediaId]: data.url }));
       }
       return data.url;
     } catch {
@@ -176,7 +184,7 @@ export function CaseMediaPanel({
         if (p) updates[p[0]] = p[1];
       }
       if (Object.keys(updates).length > 0) {
-        setSignedUrls((prev) => ({ ...prev, ...updates }));
+        setClientSignedUrls((prev) => ({ ...prev, ...updates }));
       }
     });
 

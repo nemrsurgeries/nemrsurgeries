@@ -70,6 +70,15 @@ html[dir="rtl"] body {
   font-family: "Cairo", "Segoe UI", Tahoma, "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html.theme-transition,
   html.theme-transition *,

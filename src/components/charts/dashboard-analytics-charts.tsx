@@ -1,9 +1,10 @@
+"use client";
+
 import type {
   AnalyticsBucket,
   DashboardAnalytics,
 } from "@/modules/dashboard/analytics";
-import type { Dictionary } from "@/lib/i18n/dictionaries";
-import { getDictionary } from "@/lib/i18n/dictionaries";
+import { useLocale } from "@/components/i18n/locale-provider";
 import {
   Card,
   CardContent,
@@ -68,11 +69,10 @@ function HorizontalBarCard({
 
 export function DashboardAnalyticsCharts({
   analytics,
-  dict = getDictionary("en"),
 }: {
   analytics: DashboardAnalytics;
-  dict?: Dictionary;
 }) {
+  const { dict } = useLocale();
   return (
     <div className="space-y-4">
       <div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MailCheck } from "lucide-react";
-import { getServerI18n } from "@/lib/i18n/server";
+import { T } from "@/components/i18n/t";
 import {
   Card,
   CardContent,
@@ -17,10 +17,7 @@ export default async function RegisterPage({
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
-  const [{ token }, { dict }] = await Promise.all([
-    searchParams,
-    getServerI18n(),
-  ]);
+  const { token } = await searchParams;
 
   if (token && token.trim().length > 0) {
     redirect(`/invite/${encodeURIComponent(token.trim())}`);
@@ -31,16 +28,24 @@ export default async function RegisterPage({
       <CardHeader>
         <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
           <MailCheck className="h-5 w-5" />
-          <CardTitle>{dict.auth.registerTitle}</CardTitle>
+          <CardTitle>
+            <T k="auth.registerTitle" />
+          </CardTitle>
         </div>
-        <CardDescription>{dict.auth.registerDesc}</CardDescription>
+        <CardDescription>
+          <T k="auth.registerDesc" />
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-        <p>{dict.auth.registerBody}</p>
+        <p>
+          <T k="auth.registerBody" />
+        </p>
       </CardContent>
       <CardFooter>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/login">{dict.auth.backToSignIn}</Link>
+          <Link href="/login">
+            <T k="auth.backToSignIn" />
+          </Link>
         </Button>
       </CardFooter>
     </Card>

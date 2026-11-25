@@ -2,9 +2,8 @@ import Link from "next/link";
 import { AlertCircle, CalendarClock, CheckCircle2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireSession } from "@/modules/auth/session";
-import { CASE_STATUS_META, getCaseStatusLabel } from "@/modules/cases/labels";
-import { getServerI18n } from "@/lib/i18n/server";
-import { formatDate } from "@/lib/utils";
+import { CASE_STATUS_META } from "@/modules/cases/labels";
+import { Bilingual, CaseStatusText, LocalizedDate, T } from "@/components/i18n/t";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -15,10 +14,7 @@ import {
 } from "@/components/ui/card";
 
 export default async function FollowupsPage() {
-  const [{ user }, { locale, dict }] = await Promise.all([
-    requireSession(),
-    getServerI18n(),
-  ]);
+  const { user } = await requireSession();
   const now = new Date();
 
   const [overdueCases, upcomingCases, recentFollowups] = await Promise.all([
@@ -73,10 +69,10 @@ export default async function FollowupsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {dict.pages.followupsTitle}
+          <T k="pages.followupsTitle" />
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {dict.pages.followupsDesc}
+          <T k="pages.followupsDesc" />
         </p>
       </div>
 
@@ -86,15 +82,17 @@ export default async function FollowupsPage() {
             <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
               <AlertCircle className="h-4 w-4" />
               <CardTitle>
-                {dict.pages.overdueSection} ({overdueCases.length})
+                <T k="pages.overdueSection" /> ({overdueCases.length})
               </CardTitle>
             </div>
-            <CardDescription>{dict.pages.followupsDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.followupsDesc" />
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {overdueCases.length === 0 ? (
               <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                {dict.pages.noOverdue}
+                <T k="pages.noOverdue" />
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -109,11 +107,11 @@ export default async function FollowupsPage() {
                         {c.caseNumber}
                       </span>
                       <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {c.diagnosis || dict.dashboard.untitledDiagnosis}
+                        {c.diagnosis || <T k="dashboard.untitledDiagnosis" />}
                       </p>
                     </div>
                     <Badge variant="destructive">
-                      {formatDate(c.nextFollowupDate, undefined, locale)}
+                      <LocalizedDate value={c.nextFollowupDate} />
                     </Badge>
                   </Link>
                 ))}
@@ -127,15 +125,17 @@ export default async function FollowupsPage() {
             <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
               <CalendarClock className="h-4 w-4" />
               <CardTitle>
-                {dict.pages.upcomingSection} ({upcomingCases.length})
+                <T k="pages.upcomingSection" /> ({upcomingCases.length})
               </CardTitle>
             </div>
-            <CardDescription>{dict.pages.followupsDesc}</CardDescription>
+            <CardDescription>
+              <T k="pages.followupsDesc" />
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {upcomingCases.length === 0 ? (
               <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                {dict.pages.noUpcoming}
+                <T k="pages.noUpcoming" />
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -153,15 +153,15 @@ export default async function FollowupsPage() {
                             {c.caseNumber}
                           </span>
                           <Badge variant={meta.variant}>
-                            {getCaseStatusLabel(c.status, locale)}
+                            <CaseStatusText status={c.status} />
                           </Badge>
                         </div>
                         <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100 mt-0.5">
-                          {c.diagnosis || dict.dashboard.untitledDiagnosis}
+                          {c.diagnosis || <T k="dashboard.untitledDiagnosis" />}
                         </p>
                       </div>
                       <span className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {formatDate(c.nextFollowupDate, undefined, locale)}
+                        <LocalizedDate value={c.nextFollowupDate} />
                       </span>
                     </Link>
                   );
@@ -177,23 +177,26 @@ export default async function FollowupsPage() {
           <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             <CardTitle>
-              {locale === "ar"
-                ? "أحدث زيارات المتابعة المسجلة"
-                : "Recent Follow-up Entries"}
+              <Bilingual
+                en="Recent Follow-up Entries"
+                ar="أحدث زيارات المتابعة المسجلة"
+              />
             </CardTitle>
           </div>
           <CardDescription>
-            {locale === "ar"
-              ? "آخر النتائج الإكلينيكية ونتائج الأشعة المسجلة في المتابعات."
-              : "Latest documented clinical and radiological follow-up outcomes."}
+            <Bilingual
+              en="Latest documented clinical and radiological follow-up outcomes."
+              ar="آخر النتائج الإكلينيكية ونتائج الأشعة المسجلة في المتابعات."
+            />
           </CardDescription>
         </CardHeader>
         <CardContent>
           {recentFollowups.length === 0 ? (
             <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              {locale === "ar"
-                ? "لم تُسجل زيارات متابعة بعد. افتح أي حالة لإضافة زيارة متابعة."
-                : "No follow-up visits recorded yet. Open any case to add a follow-up entry."}
+              <Bilingual
+                en="No follow-up visits recorded yet. Open any case to add a follow-up entry."
+                ar="لم تُسجل زيارات متابعة بعد. افتح أي حالة لإضافة زيارة متابعة."
+              />
             </p>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -205,10 +208,13 @@ export default async function FollowupsPage() {
                 >
                   <div className="flex items-center justify-between gap-2 text-xs">
                     <span className="font-mono font-semibold text-blue-700 dark:text-blue-400">
-                      {`${f.surgicalCase.caseNumber} — ${f.surgicalCase.diagnosis || dict.dashboard.untitledDiagnosis}`}
+                      {f.surgicalCase.caseNumber} —{" "}
+                      {f.surgicalCase.diagnosis || (
+                        <T k="dashboard.untitledDiagnosis" />
+                      )}
                     </span>
                     <span className="text-slate-500 dark:text-slate-400">
-                      {formatDate(f.followupDate, undefined, locale)}
+                      <LocalizedDate value={f.followupDate} />
                     </span>
                   </div>
                   {f.clinicalOutcome && (

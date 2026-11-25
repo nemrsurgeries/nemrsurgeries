@@ -1,3 +1,4 @@
+import type { SurgicalRole } from "@prisma/client";
 import { db } from "@/lib/db";
 import { SURGICAL_ROLE_LABELS } from "@/modules/cases/labels";
 
@@ -12,6 +13,15 @@ export interface DashboardAnalytics {
   byHospital: AnalyticsBucket[];
   byYear: AnalyticsBucket[];
   byRole: AnalyticsBucket[];
+}
+
+export interface AnalyticsCaseInput {
+  procedure: string | null;
+  fractureClassification: string | null;
+  hospital: string | null;
+  operationDate: Date | null;
+  createdAt: Date;
+  myRole: SurgicalRole | null;
 }
 
 export function aggregateCounts(
@@ -31,27 +41,11 @@ export function aggregateCounts(
 }
 
 /**
- * Computes personal dashboard analytics strictly from cases owned by `userId`.
- * Shared cases are never included in personal ownership analytics.
+ * Computes personal dashboard analytics from an already-fetched list of owned cases.
  */
-export async function getOwnedCaseAnalytics(
-  userId: string,
-): Promise<DashboardAnalytics> {
-  const cases = await db.surgicalCase.findMany({
-    where: {
-      ownerId: userId,
-      status: { not: "ARCHIVED" },
-    },
-    select: {
-      procedure: true,
-      fractureClassification: true,
-      hospital: true,
-      operationDate: true,
-      createdAt: true,
-      myRole: true,
-    },
-  });
-
+export function computeOwnedCaseAnalytics(
+  cases: AnalyticsCaseInput[],
+): DashboardAnalytics {
   const years = cases.map((c) =>
     String((c.operationDate ?? c.createdAt).getFullYear()),
   );
@@ -79,4 +73,29 @@ export async function getOwnedCaseAnalytics(
     byYear,
     byRole: aggregateCounts(roles, 5),
   };
+}
+
+/**
+ * Computes personal dashboard analytics strictly from cases owned by `userId`.
+ * Shared cases are never included in personal ownership analytics.
+ */
+export async function getOwnedCaseAnalytics(
+  userId: string,
+): Promise<DashboardAnalytics> {
+  const cases = await db.surgicalCase.findMany({
+    where: {
+      ownerId: userId,
+      status: { not: "ARCHIVED" },
+    },
+    select: {
+      procedure: true,
+      fractureClassification: true,
+      hospital: true,
+      operationDate: true,
+      createdAt: true,
+      myRole: true,
+    },
+  });
+
+  return computeOwnedCaseAnalytics(cases);
 }
